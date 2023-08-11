@@ -89,77 +89,79 @@ export default function LoginRoute() {
   const actionData = useActionData<typeof action>();
   const [searchParams] = useSearchParams();
 
-  console.log(loaderData);
-
   return (
     <main className="self-center px-6">
-      <h2 className="mb-7 text-3xl font-bold">Login</h2>
+      <div className="mx-auto max-w-md">
+        <h2 className="mb-7 text-3xl font-bold">Login</h2>
 
-      {loaderData?.message ? (
-        <Alert className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Account Creation</AlertTitle>
-          <AlertDescription>{loaderData.message}</AlertDescription>
-        </Alert>
-      ) : null}
+        {loaderData?.message ? (
+          <Alert className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Account Creation</AlertTitle>
+            <AlertDescription>{loaderData.message}</AlertDescription>
+          </Alert>
+        ) : null}
 
-      {(actionData?.formErrors.length ?? 0) > 0 ? (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{actionData?.formErrors}</AlertDescription>
-        </Alert>
-      ) : null}
+        {(actionData?.formErrors.length ?? 0) > 0 ? (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{actionData?.formErrors}</AlertDescription>
+          </Alert>
+        ) : null}
 
-      <Form method="POST">
-        <input
-          name="redirectTo"
-          hidden
-          value={searchParams.get("redirectTo") ?? undefined}
-        />
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              type="email"
-              name="email"
-              id="email"
-              placeholder="Email"
-              aria-invalid={Boolean(actionData?.fieldErrors?.email)}
-              aria-errormessage={actionData?.fieldErrors?.email?.join(", ")}
-            />
-            <FormError>{actionData?.fieldErrors?.email}</FormError>
+        <Form method="POST">
+          <input
+            name="redirectTo"
+            hidden
+            value={searchParams.get("redirectTo") ?? undefined}
+          />
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="email">Email Address</Label>
+              <Input
+                type="email"
+                name="email"
+                id="email"
+                placeholder="Email"
+                aria-invalid={Boolean(actionData?.fieldErrors?.email)}
+                aria-errormessage={actionData?.fieldErrors?.email?.join(", ")}
+              />
+              <FormError>{actionData?.fieldErrors?.email}</FormError>
+            </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                type="password"
+                name="password"
+                id="password"
+                // aria-invalid={Boolean(actionData?.fieldErrors?.password)}
+                aria-invalid={true}
+                aria-errormessage={actionData?.fieldErrors?.password?.join(
+                  ", ",
+                )}
+              />
+              <FormError>{actionData?.fieldErrors?.password}</FormError>
+            </div>
+
+            <div>
+              <Button className="w-full">Log in</Button>
+              <p className="mt-4 text-center">
+                Don’t have an account?{" "}
+                <Link
+                  to="/signup"
+                  className={buttonVariants({
+                    variant: "link",
+                    className: "px-0",
+                  })}
+                >
+                  Sign up now
+                </Link>
+              </p>
+            </div>
           </div>
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              type="password"
-              name="password"
-              id="password"
-              // aria-invalid={Boolean(actionData?.fieldErrors?.password)}
-              aria-invalid={true}
-              aria-errormessage={actionData?.fieldErrors?.password?.join(", ")}
-            />
-            <FormError>{actionData?.fieldErrors?.password}</FormError>
-          </div>
-
-          <div>
-            <Button className="w-full">Log in</Button>
-            <p className="mt-4 text-center">
-              Don’t have an account?{" "}
-              <Link
-                to="/signup"
-                className={buttonVariants({
-                  variant: "link",
-                  className: "px-0",
-                })}
-              >
-                Sign up now
-              </Link>
-            </p>
-          </div>
-        </div>
-      </Form>
+        </Form>
+      </div>
     </main>
   );
 }

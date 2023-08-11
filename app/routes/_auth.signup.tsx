@@ -69,93 +69,97 @@ export default function LoginRoute() {
 
   return (
     <main className="self-center px-6">
-      <h2 className="mb-7 text-3xl font-bold">Create an Account</h2>
+      <div className="mx-auto max-w-md">
+        <h2 className="mb-7 text-3xl font-bold">Create an Account</h2>
 
-      {(actionData?.formErrors.length ?? 0) > 0 ? (
-        <Alert variant="destructive" className="mb-6">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{actionData?.formErrors}</AlertDescription>
-        </Alert>
-      ) : null}
+        {(actionData?.formErrors.length ?? 0) > 0 ? (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{actionData?.formErrors}</AlertDescription>
+          </Alert>
+        ) : null}
 
-      <Form method="POST">
-        <input
-          name="redirectTo"
-          hidden
-          value={searchParams.get("redirectTo") ?? undefined}
-        />
-        <div className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
+        <Form method="POST">
+          <input
+            name="redirectTo"
+            hidden
+            value={searchParams.get("redirectTo") ?? undefined}
+          />
+          <div className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  name="firstName"
+                  id="firstName"
+                  placeholder="John"
+                  aria-invalid={Boolean(actionData?.fieldErrors?.firstName)}
+                  aria-errormessage={actionData?.fieldErrors?.firstName?.join(
+                    ", ",
+                  )}
+                />
+                <FormError>{actionData?.fieldErrors?.firstName}</FormError>
+              </div>
+              <div>
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  name="lastName"
+                  id="lastName"
+                  placeholder="Doe"
+                  aria-invalid={Boolean(actionData?.fieldErrors?.lastName)}
+                  aria-errormessage={actionData?.fieldErrors?.lastName?.join(
+                    ", ",
+                  )}
+                />
+                <FormError>{actionData?.fieldErrors?.lastName}</FormError>
+              </div>
+            </div>
             <div>
-              <Label htmlFor="firstName">First Name</Label>
+              <Label htmlFor="email">Email Address</Label>
               <Input
-                name="firstName"
-                id="firstName"
-                placeholder="John"
-                aria-invalid={Boolean(actionData?.fieldErrors?.firstName)}
-                aria-errormessage={actionData?.fieldErrors?.firstName?.join(
+                type="email"
+                name="email"
+                id="email"
+                placeholder="Email"
+                aria-invalid={Boolean(actionData?.fieldErrors?.email)}
+                aria-errormessage={actionData?.fieldErrors?.email?.join(", ")}
+              />
+              <FormError>{actionData?.fieldErrors?.email}</FormError>
+            </div>
+            <div>
+              <Label htmlFor="password">Password</Label>
+              <Input
+                type="password"
+                name="password"
+                id="password"
+                // aria-invalid={Boolean(actionData?.fieldErrors?.password)}
+                aria-invalid={true}
+                aria-errormessage={actionData?.fieldErrors?.password?.join(
                   ", ",
                 )}
               />
-              <FormError>{actionData?.fieldErrors?.firstName}</FormError>
+              <FormError>{actionData?.fieldErrors?.password}</FormError>
             </div>
-            <div>
-              <Label htmlFor="lastName">Last Name</Label>
-              <Input
-                name="lastName"
-                id="lastName"
-                placeholder="Doe"
-                aria-invalid={Boolean(actionData?.fieldErrors?.lastName)}
-                aria-errormessage={actionData?.fieldErrors?.lastName?.join(
-                  ", ",
-                )}
-              />
-              <FormError>{actionData?.fieldErrors?.lastName}</FormError>
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="email">Email Address</Label>
-            <Input
-              type="email"
-              name="email"
-              id="email"
-              placeholder="Email"
-              aria-invalid={Boolean(actionData?.fieldErrors?.email)}
-              aria-errormessage={actionData?.fieldErrors?.email?.join(", ")}
-            />
-            <FormError>{actionData?.fieldErrors?.email}</FormError>
-          </div>
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              type="password"
-              name="password"
-              id="password"
-              // aria-invalid={Boolean(actionData?.fieldErrors?.password)}
-              aria-invalid={true}
-              aria-errormessage={actionData?.fieldErrors?.password?.join(", ")}
-            />
-            <FormError>{actionData?.fieldErrors?.password}</FormError>
-          </div>
 
-          <div>
-            <Button className="w-full">Sign up</Button>
-            <p className="mt-4 text-center">
-              Already have an account?{" "}
-              <Link
-                to="/login"
-                className={buttonVariants({
-                  variant: "link",
-                  className: "px-0",
-                })}
-              >
-                Log in now
-              </Link>
-            </p>
+            <div>
+              <Button className="w-full">Sign up</Button>
+              <p className="mt-4 text-center">
+                Already have an account?{" "}
+                <Link
+                  to="/login"
+                  className={buttonVariants({
+                    variant: "link",
+                    className: "px-0",
+                  })}
+                >
+                  Log in now
+                </Link>
+              </p>
+            </div>
           </div>
-        </div>
-      </Form>
+        </Form>
+      </div>
     </main>
   );
 }
