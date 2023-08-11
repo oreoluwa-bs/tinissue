@@ -101,7 +101,7 @@ export function commitAuthSession(session: Session) {
 export async function getUserId(request: Request) {
   const session = await getAuthSession(request);
   const userId = session.get("userId");
-  if (!userId || typeof userId !== "string") {
+  if (!userId || typeof userId !== "number") {
     return null;
   }
   return userId;
@@ -113,7 +113,8 @@ export async function requireUserId(
 ) {
   const session = await getAuthSession(request);
   const userId = session.get("userId");
-  if (!userId || typeof userId !== "string") {
+
+  if (!userId || typeof userId !== "number") {
     const searchParams = new URLSearchParams([["redirectTo", redirectTo]]);
     throw redirect(`/login?${searchParams}`);
   }

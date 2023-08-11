@@ -20,6 +20,7 @@ export async function action({ request }: ActionArgs) {
       if (!credentials.success) {
         return json(
           {
+            fields: formObject,
             fieldErrors: credentials.error.flatten().fieldErrors,
             formErrors: credentials.error.flatten().formErrors.join(", "),
           },
@@ -32,6 +33,7 @@ export async function action({ request }: ActionArgs) {
       if (!user) {
         return json(
           {
+            fields: formObject,
             fieldErrors: null,
             formErrors:
               "Could not create your account right now. Please try again later",
@@ -55,6 +57,7 @@ export async function action({ request }: ActionArgs) {
     default:
       return json(
         {
+          fields: formObject,
           fieldErrors: null,
           formErrors: "Method not found",
         },
@@ -94,6 +97,7 @@ export default function LoginRoute() {
                   name="firstName"
                   id="firstName"
                   placeholder="John"
+                  defaultValue={actionData?.fields?.firstName}
                   aria-invalid={Boolean(actionData?.fieldErrors?.firstName)}
                   aria-errormessage={actionData?.fieldErrors?.firstName?.join(
                     ", ",
@@ -107,6 +111,7 @@ export default function LoginRoute() {
                   name="lastName"
                   id="lastName"
                   placeholder="Doe"
+                  defaultValue={actionData?.fields?.lastName}
                   aria-invalid={Boolean(actionData?.fieldErrors?.lastName)}
                   aria-errormessage={actionData?.fieldErrors?.lastName?.join(
                     ", ",
@@ -122,6 +127,7 @@ export default function LoginRoute() {
                 name="email"
                 id="email"
                 placeholder="Email"
+                defaultValue={actionData?.fields?.email}
                 aria-invalid={Boolean(actionData?.fieldErrors?.email)}
                 aria-errormessage={actionData?.fieldErrors?.email?.join(", ")}
               />
@@ -133,8 +139,8 @@ export default function LoginRoute() {
                 type="password"
                 name="password"
                 id="password"
-                // aria-invalid={Boolean(actionData?.fieldErrors?.password)}
-                aria-invalid={true}
+                defaultValue={actionData?.fields?.password}
+                aria-invalid={Boolean(actionData?.fieldErrors?.password)}
                 aria-errormessage={actionData?.fieldErrors?.password?.join(
                   ", ",
                 )}

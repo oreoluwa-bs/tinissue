@@ -32,6 +32,7 @@ export async function action({ request }: ActionArgs) {
       if (!credentials.success) {
         return json(
           {
+            fields: formObject,
             fieldErrors: credentials.error.flatten().fieldErrors,
             formErrors: credentials.error.flatten().formErrors.join(", "),
           },
@@ -44,6 +45,7 @@ export async function action({ request }: ActionArgs) {
       if (!user) {
         return json(
           {
+            fields: formObject,
             fieldErrors: null,
             formErrors: "Invalid Email/Password",
           },
@@ -61,6 +63,7 @@ export async function action({ request }: ActionArgs) {
     default:
       return json(
         {
+          fields: formObject,
           fieldErrors: null,
           formErrors: "Method not found",
         },
@@ -124,6 +127,7 @@ export default function LoginRoute() {
                 name="email"
                 id="email"
                 placeholder="Email"
+                defaultValue={actionData?.fields?.email}
                 aria-invalid={Boolean(actionData?.fieldErrors?.email)}
                 aria-errormessage={actionData?.fieldErrors?.email?.join(", ")}
               />
@@ -135,8 +139,8 @@ export default function LoginRoute() {
                 type="password"
                 name="password"
                 id="password"
-                // aria-invalid={Boolean(actionData?.fieldErrors?.password)}
-                aria-invalid={true}
+                defaultValue={actionData?.fields?.password}
+                aria-invalid={Boolean(actionData?.fieldErrors?.password)}
                 aria-errormessage={actionData?.fieldErrors?.password?.join(
                   ", ",
                 )}
