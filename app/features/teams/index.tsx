@@ -3,10 +3,13 @@ import { createTeamSchema, type ICreateTeam } from "./shared";
 import { teamMembers, teams } from "~/db/schema/teams";
 import { eq, or } from "drizzle-orm";
 
-function slugifyAndAddRandomSuffix(str: string, length: number = 5): string {
+export function slugifyAndAddRandomSuffix(
+  str: string,
+  length: number = 5,
+): string {
   const slug = str
     .toLowerCase()
-    .replace(/[^\w\-]+/g, "-")
+    .replace(/[^\w-]+/g, "-")
     .replace(/-+/g, "-");
 
   const suffix = Math.random().toString(36).substring(2, length);
@@ -14,15 +17,20 @@ function slugifyAndAddRandomSuffix(str: string, length: number = 5): string {
   return `${slug}-${suffix}`;
 }
 
-export async function createTeam(teamInfo: ICreateTeam, creatorId: number) {
+export async function createTeam(
+  teamInfo: ICreateTeam,
+  creatorId: number,
+  customSlug?: string,
+) {
   const teamData = createTeamSchema.parse(teamInfo);
 
   await db.transaction(async (tx) => {
-    const slug = slugifyAndAddRandomSuffix(teamData.name);
+    const slug = customSlug ?? slugifyAndAddRandomSuffix(teamData.name);
 
     await tx.insert(teams).values({
       name: teamData.name,
       profileImage: teamData.profileImage,
+      type: teamData.type,
       slug,
     });
 

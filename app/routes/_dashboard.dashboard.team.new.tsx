@@ -77,6 +77,19 @@ export function CreateTeamForm({ Form, data, state }: any) {
       ) : null}
 
       <Form method="POST" action="/dashboard/team/new">
+        <input
+          name="type"
+          id="type"
+          placeholder="Type"
+          hidden
+          defaultValue={data?.fields?.type ?? "TEAM"}
+          // defaultValue={data?.fields?.type}
+          // aria-invalid={Boolean(data?.fieldErrors?.type)}
+          // aria-errormessage={data?.fieldErrors?.type?.join(", ")}
+        />
+        {data?.fieldErrors?.type && (
+          <FormError>{data?.fieldErrors?.type}</FormError>
+        )}
         <div className="space-y-4">
           <div>
             <Label htmlFor="name">Name</Label>
@@ -101,14 +114,6 @@ export function CreateTeamForm({ Form, data, state }: any) {
             </Button>
           </div>
         </div>
-
-        {/* {newsletter.state === "idle" && newsletter.data ? (
-        newsletter.data.ok ? (
-          <p>Thanks for subscribing!</p>
-        ) : newsletter.data.error ? (
-          <p data-error>{newsletter.data.error}</p>
-        ) : null
-      ) : null} */}
       </Form>
     </>
   );

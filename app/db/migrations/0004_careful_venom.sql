@@ -1,0 +1,1 @@
+ALTER TABLE `teams` MODIFY COLUMN `type` text NOT NULL;

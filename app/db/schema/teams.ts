@@ -17,6 +17,7 @@ export const teams = mysqlTable(
     slug: varchar("slug", { length: 50 }).unique(),
     name: text("name"),
     profileImage: text("profile_image"),
+    type: text("type", { enum: ["PERSONAL", "TEAM"] }).notNull(),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").onUpdateNow(),

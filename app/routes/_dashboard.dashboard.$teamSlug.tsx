@@ -20,6 +20,7 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
+  CommandInput,
   CommandItem,
   CommandList,
   CommandSeparator,
@@ -111,7 +112,7 @@ interface NavbarProps {
 
 function Navbar({ user, teams, currentTeam }: NavbarProps) {
   return (
-    <header className="sticky top-0 border-b border-gray-300 bg-white px-6 py-2">
+    <header className="border-border-300 sticky top-0 border-b bg-background px-6 py-2">
       <div className="flex  items-center justify-between">
         <div className="inline-flex items-center gap-5">
           <img src="/favicon.ico" alt="logo" className="w-8" />
@@ -163,7 +164,6 @@ function TeamSwitcher({
 }) {
   const [showNewTeamDialog, setShowNewTeamDialog] = useState(false);
   const [open, setOpen] = useState(false);
-
   const newTeam = useFetcher();
 
   useEffect(() => {
@@ -201,23 +201,42 @@ function TeamSwitcher({
         <PopoverContent className="w-[200px] p-0">
           {/* Menu */}
           <Command>
-            {/* <CommandInput placeholder="Type a command or search..." /> */}
+            <CommandInput placeholder="Search..." />
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
               <CommandGroup>
-                <CommandItem>
-                  <NavLink to={`/dashboard/personal`} className="flex w-full">
-                    <Avatar className="mr-2 h-5 w-5 text-xs">
-                      <AvatarImage src={`${"/favicon.ico"}`} alt={"Personal"} />
-                      <AvatarFallback>P</AvatarFallback>
-                    </Avatar>
-                    <span>Personal</span>
-                  </NavLink>
-                </CommandItem>
+                {teams.map((item) => {
+                  const thisTeam = item.teams;
+
+                  if (thisTeam?.type !== "PERSONAL") return null;
+
+                  return (
+                    <CommandItem key={thisTeam?.slug}>
+                      <NavLink
+                        to={`/dashboard/${thisTeam?.slug}`}
+                        className="flex w-full"
+                        key={thisTeam?.slug}
+                      >
+                        <Avatar className="mr-2 h-5 w-5 text-xs">
+                          <AvatarImage
+                            src={`${thisTeam?.profileImage ?? "/favicon.ico"}`}
+                            alt={thisTeam?.name ?? ""}
+                          />
+                          <AvatarFallback>{thisTeam?.name?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <span>{thisTeam?.name}</span>
+                      </NavLink>
+                    </CommandItem>
+                  );
+                })}
               </CommandGroup>
+
               <CommandGroup heading="Teams">
                 {teams.map((item) => {
                   const thisTeam = item.teams;
+
+                  if (thisTeam?.type === "PERSONAL") return null;
+
                   return (
                     <CommandItem key={thisTeam?.slug}>
                       <NavLink
