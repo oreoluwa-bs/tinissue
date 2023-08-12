@@ -50,7 +50,6 @@ export const projectMembers = mysqlTable(
     teamId: int("team_id")
       .notNull()
       .references(() => teams.id, { onUpdate: "cascade", onDelete: "cascade" }),
-
     projectId: int("project_id")
       .notNull()
       .references(() => projects.id, {
