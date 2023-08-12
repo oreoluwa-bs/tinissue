@@ -3,8 +3,12 @@ import { createTeam, slugifyAndAddRandomSuffix } from "../teams";
 
 export const authEvent = new EventEmitter();
 
+export const AUTH_EVENTS = {
+  NEW_USER: "NEW_USER",
+} as const;
+
 authEvent.on(
-  "NEW_USER",
+  AUTH_EVENTS.NEW_USER,
   async (user: { id: number; firstName: string; lastName: string }) => {
     // Create Personal Team
     await createTeam(

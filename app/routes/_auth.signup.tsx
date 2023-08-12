@@ -12,7 +12,7 @@ import { Button, buttonVariants } from "~/components/ui/button";
 import { FormError } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { authEvent } from "~/features/auth/event.server";
+import { AUTH_EVENTS, authEvent } from "~/features/auth/event.server";
 
 export async function action({ request }: ActionArgs) {
   const formData = await request.formData();
@@ -52,7 +52,7 @@ export async function action({ request }: ActionArgs) {
         "NEW_USER",
         "Your account has been created! Please login to continue.",
       );
-      authEvent.emit("NEW_USER", user);
+      authEvent.emit(AUTH_EVENTS.NEW_USER, user);
 
       return redirect("/login", {
         headers: {
