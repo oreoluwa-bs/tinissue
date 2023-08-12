@@ -118,6 +118,8 @@ export async function requireUserId(
     const searchParams = new URLSearchParams([["redirectTo", redirectTo]]);
     throw redirect(`/login?${searchParams}`);
   }
+
+  return userId;
 }
 
 export async function createAuthSession(userId: number, redirectTo: string) {
