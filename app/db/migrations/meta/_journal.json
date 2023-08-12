@@ -43,6 +43,13 @@
       "when": 1691876264587,
       "tag": "0005_modern_true_believers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1691878766881,
+      "tag": "0006_puzzling_radioactive_man",
+      "breakpoints": true
     }
   ]
 }

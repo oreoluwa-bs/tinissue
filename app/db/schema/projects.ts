@@ -16,7 +16,7 @@ export const projects = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     slug: varchar("slug", { length: 100 }), // .unique(),
-    name: text("name"),
+    name: text("name").notNull(),
     description: text("description"),
     teamId: int("team_id").notNull(),
 
