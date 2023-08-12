@@ -9,6 +9,7 @@ import {
   int,
 } from "drizzle-orm/mysql-core";
 import { users } from "./users";
+import { projectMembers, projects } from "./projects";
 
 export const teams = mysqlTable(
   "teams",
@@ -32,6 +33,8 @@ export const teams = mysqlTable(
 
 export const teamsRelations = relations(teams, ({ many }) => ({
   members: many(teamMembers),
+  projects: many(projects),
+  projectMembers: many(projectMembers),
 }));
 
 export const teamMembers = mysqlTable(
