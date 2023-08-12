@@ -15,6 +15,13 @@
       "when": 1691786929110,
       "tag": "0001_easy_edwin_jarvis",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1691813840173,
+      "tag": "0002_rare_vulcan",
+      "breakpoints": true
     }
   ]
 }
