@@ -1,8 +1,12 @@
 import { json, type ActionArgs, redirect } from "@remix-run/node";
 import { Form, Link, useActionData, useSearchParams } from "@remix-run/react";
 import { AlertCircle } from "lucide-react";
-import { commitAuthSession, credentialsSignUp, getAuthSession } from "~/auth";
-import { credentialsSignupSchema } from "~/auth/shared";
+import {
+  commitAuthSession,
+  credentialsSignUp,
+  getAuthSession,
+} from "~/features/auth";
+import { credentialsSignupSchema } from "~/features/auth/shared";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { FormError } from "~/components/ui/form";

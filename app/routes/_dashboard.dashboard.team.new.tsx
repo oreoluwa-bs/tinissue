@@ -1,7 +1,7 @@
 import type { ActionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { AlertCircle } from "lucide-react";
-import { requireUserId } from "~/auth";
+import { requireUserId } from "~/features/auth";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { FormError } from "~/components/ui/form";

@@ -1,6 +1,6 @@
 import type { LoaderArgs } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
-import { getUserId } from "~/auth";
+import { getUserId } from "~/features/auth";
 
 export async function loader({ request }: LoaderArgs) {
   const userId = await getUserId(request);

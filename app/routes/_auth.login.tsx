@@ -13,8 +13,8 @@ import {
   createAuthSession,
   credentialsLogin,
   getAuthSession,
-} from "~/auth";
-import { credentialsLoginSchema } from "~/auth/shared";
+} from "~/features/auth";
+import { credentialsLoginSchema } from "~/features/auth/shared";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { FormError } from "~/components/ui/form";

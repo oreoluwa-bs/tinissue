@@ -13,7 +13,7 @@ import {
   PlusCircleIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { requireUserId } from "~/auth";
+import { requireUserId } from "~/features/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import {
@@ -52,7 +52,16 @@ export async function loader({ params, request }: LoaderArgs) {
 
   const userTeams = await getUserTeams(userId);
 
-  const currentTeam = await getTeam(params["teamSlug"]);
+  const slug = params["teamSlug"];
+  const currentTeam =
+    slug?.toLowerCase() === "personal"
+      ? {
+          id: "personal",
+          slug: "personal",
+          name: "Personal",
+          profileImage: "",
+        }
+      : await getTeam(slug);
 
   return json({
     user,
@@ -195,6 +204,17 @@ function TeamSwitcher({
             {/* <CommandInput placeholder="Type a command or search..." /> */}
             <CommandList>
               <CommandEmpty>No results found.</CommandEmpty>
+              <CommandGroup>
+                <CommandItem>
+                  <NavLink to={`/dashboard/personal`} className="flex w-full">
+                    <Avatar className="mr-2 h-5 w-5 text-xs">
+                      <AvatarImage src={`${"/favicon.ico"}`} alt={"Personal"} />
+                      <AvatarFallback>P</AvatarFallback>
+                    </Avatar>
+                    <span>Personal</span>
+                  </NavLink>
+                </CommandItem>
+              </CommandGroup>
               <CommandGroup heading="Teams">
                 {teams.map((item) => {
                   const thisTeam = item.teams;
@@ -204,7 +224,6 @@ function TeamSwitcher({
                         to={`/dashboard/${thisTeam?.slug}`}
                         className="flex w-full"
                         key={thisTeam?.slug}
-                        end
                       >
                         <Avatar className="mr-2 h-5 w-5 text-xs">
                           <AvatarImage
