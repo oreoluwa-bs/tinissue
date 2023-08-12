@@ -131,3 +131,20 @@ export async function createAuthSession(userId: number, redirectTo: string) {
     },
   });
 }
+
+//   if (!user) {
+//     throw await logout(request);
+//   }
+
+//   return user;
+// }
+
+export async function logout(request: Request) {
+  const session = await getAuthSession(request);
+
+  return redirect("/login", {
+    headers: {
+      "Set-Cookie": await storage.destroySession(session),
+    },
+  });
+}
