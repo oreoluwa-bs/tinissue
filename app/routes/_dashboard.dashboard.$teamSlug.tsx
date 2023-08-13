@@ -144,7 +144,7 @@ function Navbar({ user, teams, currentTeam }: NavbarProps) {
                 }
                 end={route.isEnd}
               >
-                <route.icon />
+                <route.icon strokeWidth={1.5} />
                 <span className="ml-2">{route.label}</span>
               </NavLink>
             );
@@ -268,7 +268,10 @@ function TeamSwitcher({
                       setShowNewTeamDialog(true);
                     }}
                   >
-                    <PlusCircleIcon className="mr-2 h-5 w-5" />
+                    <PlusCircleIcon
+                      className="mr-2 h-5 w-5"
+                      strokeWidth={1.25}
+                    />
                     Create Team
                   </CommandItem>
                 </DialogTrigger>
