@@ -50,18 +50,23 @@ export async function getUserTeams(userId: number) {
   const userTeams = await db
     .select()
     .from(teamMembers)
-    .leftJoin(teams, eq(teamMembers.teamId, teams.id))
-    .where(eq(teamMembers.userId, userId));
+    .where(eq(teamMembers.userId, userId))
+    .innerJoin(teams, eq(teamMembers.teamId, teams.id));
 
   return userTeams;
 }
 
-export async function getTeam(idOrSlug: any) {
+export async function getTeam(idOrSlug: string | number) {
   const team = (
     await db
       .select()
       .from(teams)
-      .where(or(eq(teams.id, idOrSlug), eq(teams.slug, idOrSlug)))
+      .where(
+        or(
+          eq(teams.id, idOrSlug as number),
+          eq(teams.slug, idOrSlug as string),
+        ),
+      )
   )[0];
 
   return team;
