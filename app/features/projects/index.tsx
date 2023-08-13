@@ -1,8 +1,9 @@
-import { projectMembers, projects } from "~/db/schema/projects";
-import { createProjectSchema, type ICreateProject } from "./shared";
+import { and, eq, isNotNull, or, sql } from "drizzle-orm";
 import { db } from "~/db/db.server";
-import { and, eq } from "drizzle-orm";
+import { projectMembers, projects } from "~/db/schema/projects";
+import { users } from "~/db/schema/users";
 import { slugifyAndAddRandomSuffix } from "../teams";
+import { createProjectSchema, type ICreateProject } from "./shared";
 
 export async function createProject(data: ICreateProject, creatorId: number) {
   const projectData = createProjectSchema.parse(data);
@@ -34,7 +35,17 @@ export async function createProject(data: ICreateProject, creatorId: number) {
   });
 }
 
-export async function getUserTeamProjects(teamId: number, userId: number) {
+export async function getUserTeamProjects(
+  teamId: number,
+  userId: number,
+  filters?: Partial<{
+    search: string;
+    limit: number;
+    page: number;
+  }>,
+) {
+  const { limit = 30, page = 1, search } = filters ?? {};
+
   const projectList = await db
     .select()
     .from(projectMembers)
@@ -43,9 +54,57 @@ export async function getUserTeamProjects(teamId: number, userId: number) {
         eq(projectMembers.teamId, teamId),
         eq(projectMembers.userId, userId),
         eq(projectMembers.projectId, projects.id),
+        (search?.trim().length ?? 0) > 0
+          ? sql`lower(${projects.name}) like lower(${"%" + search + "%"})`
+          : isNotNull(projects.name),
       ),
     )
-    .innerJoin(projects, eq(projectMembers.teamId, teamId));
+    .innerJoin(projects, eq(projectMembers.teamId, teamId))
+    .limit(limit)
+    .offset(limit * (page - 1));
 
-  return projectList.map((item) => item.projects);
+  return {
+    result: projectList.map((item) => item.projects),
+    limit,
+    page,
+    meta: {
+      total: projectList.length,
+    },
+  };
+}
+
+export async function getProject(idOrSlug: string | number) {
+  const projectList = await db
+    .select({
+      projects: projects,
+      project_members: projectMembers,
+      users: {
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        fullName: sql`CONCAT(${users.firstName},' ', ${users.lastName})`,
+        initials: sql`CONCAT(LEFT(${users.firstName}, 1),LEFT(${users.lastName}, 1))`,
+        email: users.email,
+        profilePhoto: sql`CONCAT('','')`,
+      },
+    })
+    .from(projects)
+    .where(
+      or(
+        eq(projects.id, idOrSlug as number),
+        eq(projects.slug, idOrSlug as string),
+      ),
+    )
+    .innerJoin(projectMembers, eq(projectMembers.projectId, projects.id))
+    .innerJoin(users, eq(users.id, projectMembers.userId));
+
+  const project = {
+    project: projectList[0].projects,
+    members: projectList.map((i) => ({
+      // projectMember: i.project_members,
+      ...i.users,
+    })),
+  };
+
+  return project;
 }

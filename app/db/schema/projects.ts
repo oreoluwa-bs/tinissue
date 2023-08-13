@@ -1,3 +1,4 @@
+import type { InferModel } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import {
   int,
@@ -30,6 +31,8 @@ export const projects = mysqlTable(
     };
   },
 );
+
+export type Project = InferModel<typeof projects>;
 
 export const projectRelations = relations(projects, ({ one, many }) => {
   return {
