@@ -98,7 +98,9 @@ export default function LoginRoute() {
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
-                <Label htmlFor="firstName">First Name</Label>
+                <Label htmlFor="firstName" className="mb-2">
+                  First Name
+                </Label>
                 <Input
                   name="firstName"
                   id="firstName"
@@ -112,7 +114,9 @@ export default function LoginRoute() {
                 <FormError>{actionData?.fieldErrors?.firstName}</FormError>
               </div>
               <div>
-                <Label htmlFor="lastName">Last Name</Label>
+                <Label htmlFor="lastName" className="mb-2">
+                  Last Name
+                </Label>
                 <Input
                   name="lastName"
                   id="lastName"
@@ -127,7 +131,9 @@ export default function LoginRoute() {
               </div>
             </div>
             <div>
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="mb-2">
+                Email Address
+              </Label>
               <Input
                 type="email"
                 name="email"
@@ -140,7 +146,9 @@ export default function LoginRoute() {
               <FormError>{actionData?.fieldErrors?.email}</FormError>
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="mb-2">
+                Password
+              </Label>
               <Input
                 type="password"
                 name="password"

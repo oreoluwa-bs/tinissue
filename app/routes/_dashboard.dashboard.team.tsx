@@ -92,7 +92,9 @@ export function CreateTeamForm({ Form, data, state }: any) {
         )}
         <div className="space-y-4">
           <div>
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name" className="mb-2">
+              Name
+            </Label>
             <Input
               name="name"
               id="name"

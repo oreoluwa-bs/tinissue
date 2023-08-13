@@ -6,7 +6,7 @@ interface ProjectCardProps {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   return (
-    <div className="rounded-lg border-border bg-background/50 p-4">
+    <div className="rounded-lg border border-border bg-card p-4 text-card-foreground">
       <h3 className="font-medium">{project.name}</h3>
       {/* <p>{project.slug}</p> */}
     </div>

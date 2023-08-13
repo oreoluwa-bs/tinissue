@@ -62,7 +62,9 @@ export function CreateProjectForm({
         )} */}
         <div className="space-y-4">
           <div>
-            <Label htmlFor="name">Project Name</Label>
+            <Label htmlFor="name" className="mb-2">
+              Project Name
+            </Label>
             <Input
               name="name"
               id="name"
@@ -76,7 +78,9 @@ export function CreateProjectForm({
 
           <div>
             <div hidden>
-              <Label htmlFor="teamId">Team</Label>
+              <Label htmlFor="teamId" className="mb-2">
+                Team
+              </Label>
               <Select name="teamId" defaultValue={currentTeam?.id.toString()}>
                 <SelectTrigger id="teamId">
                   <SelectValue placeholder="Select a team" />
@@ -99,7 +103,9 @@ export function CreateProjectForm({
           </div>
 
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className="mb-2">
+              Description
+            </Label>
             <Textarea
               name="description"
               id="description"

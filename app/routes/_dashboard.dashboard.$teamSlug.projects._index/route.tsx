@@ -154,9 +154,9 @@ export default function Index() {
 
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Create team</DialogTitle>
+              <DialogTitle>Create Project</DialogTitle>
               <DialogDescription>
-                Add a new team to manage your projects.
+                Add a new project to your team
               </DialogDescription>
             </DialogHeader>
 

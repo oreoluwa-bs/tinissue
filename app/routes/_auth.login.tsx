@@ -121,7 +121,9 @@ export default function LoginRoute() {
           />
           <div className="space-y-4">
             <div>
-              <Label htmlFor="email">Email Address</Label>
+              <Label htmlFor="email" className="mb-2">
+                Email Address
+              </Label>
               <Input
                 type="email"
                 name="email"
@@ -134,7 +136,9 @@ export default function LoginRoute() {
               <FormError>{actionData?.fieldErrors?.email}</FormError>
             </div>
             <div>
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="mb-2">
+                Password
+              </Label>
               <Input
                 type="password"
                 name="password"

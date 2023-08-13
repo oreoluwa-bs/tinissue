@@ -74,7 +74,7 @@ export default function DashboardLayout() {
         teams={loaderData.teams}
         currentTeam={loaderData.currentTeam}
       />
-      <div className="flex-1 bg-gray-200 px-6">
+      <div className="flex-1 bg-background/50 px-6">
         <Outlet />
         {/* <div className="h-[2000px] bg-red-200" /> */}
       </div>
