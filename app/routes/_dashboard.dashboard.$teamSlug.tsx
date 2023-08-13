@@ -38,7 +38,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { CreateTeamForm } from "./_dashboard.dashboard.team.new";
+import { CreateTeamForm } from "./_dashboard.dashboard.team";
 import { getTeam, getUserTeams } from "~/features/teams";
 import { getUserProfile } from "~/features/user";
 import { cn } from "~/lib/utils";
@@ -54,16 +54,8 @@ export async function loader({ params, request }: LoaderArgs) {
 
   const userTeams = await getUserTeams(userId);
 
-  const slug = params["teamSlug"];
-  const currentTeam =
-    slug?.toLowerCase() === "personal"
-      ? {
-          id: "personal",
-          slug: "personal",
-          name: "Personal",
-          profileImage: "",
-        }
-      : await getTeam(slug);
+  const slug = params["teamSlug"] as string;
+  const currentTeam = await getTeam(slug);
 
   return json({
     user,

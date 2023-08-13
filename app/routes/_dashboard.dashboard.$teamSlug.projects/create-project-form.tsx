@@ -1,14 +1,11 @@
-import type { ActionArgs } from "@remix-run/node";
 import type { Form } from "@remix-run/react";
-import { json } from "@remix-run/node";
+import { useParams } from "@remix-run/react";
 import { AlertCircle } from "lucide-react";
-import { requireUserId } from "~/features/auth";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { FormError } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
-import { useParams } from "@remix-run/react";
 import {
   Select,
   SelectContent,
@@ -17,67 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { createProject } from "~/features/projects";
-import { createProjectSchema } from "~/features/projects/shared";
-import { type Team } from "~/db/schema/teams";
 import { Textarea } from "~/components/ui/textarea";
-
-export async function action({ request }: ActionArgs) {
-  const userId = await requireUserId(request);
-  const formData = await request.formData();
-  const formObject = Object.fromEntries(formData) as { [x: string]: any };
-
-  switch (request.method) {
-    case "POST":
-      const credentials = createProjectSchema.safeParse({
-        ...formObject,
-        ...(formObject.teamId && { teamId: Number(formObject.teamId) }),
-      });
-
-      if (!credentials.success) {
-        return json(
-          {
-            fields: formObject,
-            fieldErrors: credentials.error.flatten().fieldErrors,
-            formErrors: credentials.error.flatten().formErrors.join(", "),
-          },
-          { status: 400 },
-        );
-      }
-
-      try {
-        await createProject(credentials.data, userId);
-
-        return json(
-          {
-            fields: formObject,
-            fieldErrors: null,
-            formErrors: null,
-          },
-          { status: 201 },
-        );
-      } catch (error) {
-        return json(
-          {
-            fields: formObject,
-            fieldErrors: null,
-            formErrors: "Invalid Email/Password",
-          },
-          { status: 400 },
-        );
-      }
-
-    default:
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-          formErrors: "Method not found",
-        },
-        { status: 400 },
-      );
-  }
-}
+import { type Team } from "~/db/schema/teams";
 
 interface CreateProjectFormProps {
   Form: typeof Form;
@@ -108,7 +46,7 @@ export function CreateProjectForm({
         </Alert>
       ) : null}
 
-      <Form method="POST" action={`/dashboard/${currentTeamSlug}/projects/new`}>
+      <Form method="POST" action={`/dashboard/${currentTeamSlug}/projects`}>
         {/* <input
           name="type"
           id="type"

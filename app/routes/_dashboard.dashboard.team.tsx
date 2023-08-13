@@ -76,7 +76,7 @@ export function CreateTeamForm({ Form, data, state }: any) {
         </Alert>
       ) : null}
 
-      <Form method="POST" action="/dashboard/team/new">
+      <Form method="POST" action="/dashboard/team">
         <input
           name="type"
           id="type"
