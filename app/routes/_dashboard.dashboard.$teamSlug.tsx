@@ -41,7 +41,7 @@ import {
 import { CreateTeamForm } from "./_dashboard.dashboard.team";
 import { getTeam, getUserTeams } from "~/features/teams";
 import { getUserProfile } from "~/features/user";
-import { cn } from "~/lib/utils";
+import { cn, generateAvatarGradient } from "~/lib/utils";
 
 export async function loader({ params, request }: LoaderArgs) {
   const userId = await requireUserId(request);
@@ -105,6 +105,7 @@ interface NavbarProps {
 }
 
 function Navbar({ user, teams, currentTeam }: NavbarProps) {
+  const avatarColor = generateAvatarGradient(user.firstName!, user.lastName!);
   return (
     <header className="border-border-300 sticky top-0 border-b bg-background px-6 py-2">
       <div className="flex  items-center justify-between">
@@ -117,7 +118,14 @@ function Navbar({ user, teams, currentTeam }: NavbarProps) {
         <div className="inline-flex items-center gap-2">
           <Avatar>
             <AvatarImage src={user.profilePhoto} alt={user.fullName} />
-            <AvatarFallback>{user.initials}</AvatarFallback>
+            <AvatarFallback
+              style={{
+                background: avatarColor.gradient,
+                color: avatarColor.isLight ? "black" : "white",
+              }}
+            >
+              {user.initials}
+            </AvatarFallback>
           </Avatar>
           <Form method="POST" action="/logout">
             <Button size="sm">Logout</Button>
