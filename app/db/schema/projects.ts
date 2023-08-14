@@ -11,6 +11,7 @@ import {
 } from "drizzle-orm/mysql-core";
 import { teams } from "./teams";
 import { users } from "./users";
+import { projectMilestones } from "./project-milestones";
 
 export const projects = mysqlTable(
   "projects",
@@ -41,6 +42,8 @@ export const projectRelations = relations(projects, ({ one, many }) => {
       references: [teams.id],
     }),
     projectMembers: many(projectMembers),
+    milestones: many(projectMilestones),
+    // boards: many(projectBoards),
   };
 });
 

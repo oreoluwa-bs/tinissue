@@ -50,6 +50,27 @@
       "when": 1691878766881,
       "tag": "0006_puzzling_radioactive_man",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1691900466238,
+      "tag": "0007_dusty_otto_octavius",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1691959673363,
+      "tag": "0008_slim_firestar",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1691967063745,
+      "tag": "0009_noisy_sauron",
+      "breakpoints": true
     }
   ]
 }

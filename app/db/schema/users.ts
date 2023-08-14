@@ -9,6 +9,7 @@ import {
 import { relations, type InferModel } from "drizzle-orm";
 import { teamMembers } from "./teams";
 import { projectMembers } from "./projects";
+import { projectMilestoneAssignees } from "./project-milestones";
 
 export const users = mysqlTable(
   "users",
@@ -34,6 +35,7 @@ export type User = InferModel<typeof users>;
 export type InsertUser = InferModel<typeof users, "insert">;
 
 export const usersRelations = relations(users, ({ many }) => ({
-  teamMembers: many(teamMembers),
+  teams: many(teamMembers),
   projects: many(projectMembers),
+  assigned: many(projectMilestoneAssignees),
 }));
