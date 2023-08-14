@@ -7,6 +7,9 @@ import {
 import { useLoaderData } from "@remix-run/react";
 import { requireUserId } from "~/features/auth";
 import { getProject } from "~/features/projects";
+import { getProjectMilestones } from "~/features/projects/milestones";
+import { statusValues } from "~/features/projects/milestones/shared";
+import { MilestoneKanbanCard } from "./milestone-card";
 
 // export async function action({ request }: ActionArgs) {
 //   const userId = await requireUserId(request);
@@ -70,9 +73,11 @@ export async function loader({ params, request }: LoaderArgs) {
   // const url = new URL(request.url);
 
   const project = await getProject(params.projectSlug as string);
+  const milestones = await getProjectMilestones(params.projectSlug as string);
 
   return json({
     project,
+    milestones,
     userId,
   });
 }
@@ -80,13 +85,49 @@ export async function loader({ params, request }: LoaderArgs) {
 export default function ProjectRoute() {
   const loaderData = useLoaderData<typeof loader>();
   // console.log(loaderData);
+
   return (
     <main className="py-6">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="">{loaderData.project.project.name}</h2>
       </div>
 
-      <section></section>
+      <section>
+        <div className="flex h-[75vh] flex-1 gap-4 overflow-auto">
+          {statusValues.map((stat) => {
+            const milestones = loaderData.milestones.filter(
+              (item) => item.milestone.status === stat,
+            );
+
+            return (
+              <div
+                key={stat}
+                className="bordr flex-shrink-0 rounded-lg border-border bg-border/25 p-4"
+                style={{ width: 350 }}
+              >
+                <h3 className="font-medium capitalize">{stat.toLowerCase()}</h3>
+                <div className="mt-4">
+                  {milestones.map((milestone) => {
+                    return (
+                      <MilestoneKanbanCard
+                        key={milestone.milestone.id}
+                        milestone={{
+                          ...milestone.milestone,
+                          createdAt: new Date(milestone.milestone.createdAt),
+                          updatedAt: milestone.milestone.updatedAt
+                            ? new Date(milestone.milestone.updatedAt)
+                            : null,
+                        }}
+                        assignees={milestone.assignees}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
     </main>
   );
 }
