@@ -10,6 +10,8 @@
     "db:push": "drizzle-kit push:mysql",
     "db:drop": "drizzle-kit drop",
     "db:studio": "drizzle-kit studio",
+    "test": "vitest",
+    "coverage": "vitest run --coverage",
     "typecheck": "tsc"
   },
   "dependencies": {
@@ -43,14 +45,22 @@
   "devDependencies": {
     "@remix-run/dev": "^1.19.3",
     "@remix-run/eslint-config": "^1.19.3",
+    "@testing-library/jest-dom": "^6.0.0",
+    "@testing-library/react": "^14.0.0",
+    "@testing-library/user-event": "^14.4.3",
     "@types/bcryptjs": "^2.4.2",
     "@types/react": "^18.0.35",
     "@types/react-dom": "^18.0.11",
+    "@vitejs/plugin-react": "^4.0.4",
+    "@vitest/coverage-v8": "^0.34.1",
     "drizzle-kit": "^0.19.12",
     "eslint": "^8.38.0",
+    "jsdom": "^22.1.0",
     "prettier": "^3.0.1",
     "prettier-plugin-tailwindcss": "^0.5.2",
-    "typescript": "^5.0.4"
+    "typescript": "^5.0.4",
+    "vite-tsconfig-paths": "^4.2.0",
+    "vitest": "^0.34.1"
   },
   "engines": {
     "node": ">=14.0.0"
