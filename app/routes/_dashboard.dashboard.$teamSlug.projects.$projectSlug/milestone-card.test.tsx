@@ -1,4 +1,4 @@
-import { render, screen } from "~/test/utils";
+import { render, screen } from "test/utils";
 import { MilestoneKanbanCard } from "./milestone-card";
 
 describe("Milestone Card", () => {
