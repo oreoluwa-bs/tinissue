@@ -1,6 +1,6 @@
 import { db } from "~/db/db.server";
-import type { ICreateProjectMilestone } from "./shared";
-import { createProjectMilestoneSchema } from "./shared";
+import type { ICreateProjectMilestone, IEditMilestone } from "./shared";
+import { createProjectMilestoneSchema, editMilestoneSchema } from "./shared";
 import { slugifyAndAddRandomSuffix } from "~/features/teams";
 import {
   projectMilestoneAssignees,
@@ -8,8 +8,9 @@ import {
   projects,
   users,
 } from "~/db/schema";
-import { eq, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { userSelect } from "~/features/user/utils";
+import { removeEmptyFields } from "~/lib/utils";
 
 export async function createMilestone(data: ICreateProjectMilestone) {
   const projectData = createProjectMilestoneSchema.parse(data);
@@ -33,12 +34,13 @@ export async function createMilestone(data: ICreateProjectMilestone) {
         .where(eq(projectMilestones.slug, slug))
     )[0];
 
-    await tx.insert(projectMilestoneAssignees).values(
-      projectData.assigneesId.map((userId) => ({
-        projectMilestoneId: newMilestone.id,
-        userId,
-      })),
-    );
+    projectData.assigneesId.length > 0 &&
+      (await tx.insert(projectMilestoneAssignees).values(
+        projectData.assigneesId.map((userId) => ({
+          projectMilestoneId: newMilestone.id,
+          userId,
+        })),
+      ));
   });
 }
 
@@ -68,11 +70,11 @@ export async function getProjectMilestones(projectIdOrSlug: number | string) {
         eq(projects.slug, projectIdOrSlug as string),
       ),
     )
-    .innerJoin(
+    .leftJoin(
       projectMilestoneAssignees,
       eq(projectMilestoneAssignees.projectMilestoneId, projectMilestones.id),
     )
-    .innerJoin(users, eq(projectMilestoneAssignees.userId, users.id));
+    .leftJoin(users, eq(projectMilestoneAssignees.userId, users.id));
 
   const groupedMilestones = milestones.reduce(
     (acc, milestone) => {
@@ -80,7 +82,11 @@ export async function getProjectMilestones(projectIdOrSlug: number | string) {
 
       acc[milestone.milestones.id] = {
         milestone: milestone.milestones,
-        assignees: [...prevAssign, milestone.assignees],
+        // @ts-ignore
+        assignees: milestone.assignees
+          ? // @ts-ignore
+            [...prevAssign, milestone.assignees]
+          : prevAssign,
       };
       return acc;
     },
@@ -115,3 +121,35 @@ export async function getProjectMilestones(projectIdOrSlug: number | string) {
 
 //   return Object.values(groupedData);
 // }
+
+async function canEditMilestone(milestoneId: number, userId: number) {
+  const milestone = await db
+    .select()
+    .from(projectMilestones)
+    .where(eq(projectMilestones.id, milestoneId))
+    .innerJoin(
+      projectMilestoneAssignees,
+      and(
+        eq(projectMilestoneAssignees.projectMilestoneId, milestoneId),
+        eq(projectMilestoneAssignees.userId, userId),
+      ),
+    );
+
+  if (milestone.length < 1 || !milestone[0])
+    throw new Error("You are not authorized");
+
+  return milestone[0];
+}
+
+export async function editMilestone(data: IEditMilestone, userId: number) {
+  const milestoneData = editMilestoneSchema.parse(data);
+
+  await canEditMilestone(milestoneData.id, userId);
+
+  const valuesToUpdate = removeEmptyFields(milestoneData);
+
+  await db.update(projectMilestones).set({
+    // ...milestone.project_milestones,
+    ...valuesToUpdate,
+  });
+}

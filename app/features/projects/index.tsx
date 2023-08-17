@@ -4,6 +4,7 @@ import { projectMembers, projects } from "~/db/schema/projects";
 import { users } from "~/db/schema/users";
 import { slugifyAndAddRandomSuffix } from "../teams";
 import { createProjectSchema, type ICreateProject } from "./shared";
+import { userSelect } from "../user/utils";
 
 export async function createProject(data: ICreateProject, creatorId: number) {
   const projectData = createProjectSchema.parse(data);
@@ -78,15 +79,7 @@ export async function getProject(idOrSlug: string | number) {
     .select({
       projects: projects,
       project_members: projectMembers,
-      users: {
-        id: users.id,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        fullName: sql`CONCAT(${users.firstName},' ', ${users.lastName})`,
-        initials: sql`CONCAT(LEFT(${users.firstName}, 1),LEFT(${users.lastName}, 1))`,
-        email: users.email,
-        profilePhoto: sql`CONCAT('','')`,
-      },
+      users: userSelect(users),
     })
     .from(projects)
     .where(
