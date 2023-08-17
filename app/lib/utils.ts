@@ -16,3 +16,17 @@ export function generateAvatarGradient(...str: (string | number)[]) {
     isLight: colors[0].isLight,
   };
 }
+
+export const removeEmptyFields = <T extends { [key: string]: any }>(
+  data: T,
+) => {
+  const newObject = { ...data };
+
+  Object.keys(newObject).forEach((key) => {
+    if (newObject[key] === "" || newObject[key] == null) {
+      delete newObject[key];
+    }
+  });
+
+  return newObject;
+};
