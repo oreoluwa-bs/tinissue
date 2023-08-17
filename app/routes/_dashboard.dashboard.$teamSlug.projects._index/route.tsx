@@ -165,6 +165,7 @@ export default function Index() {
               Form={newProject.Form}
               data={newProject.data}
               state={newProject.state}
+              currentTeamSlug={params["teamSlug"] as string}
             />
           </DialogContent>
         </Dialog>

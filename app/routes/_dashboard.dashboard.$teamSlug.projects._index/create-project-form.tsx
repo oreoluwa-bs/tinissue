@@ -1,5 +1,4 @@
 import type { Form } from "@remix-run/react";
-import { useParams } from "@remix-run/react";
 import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
@@ -22,6 +21,7 @@ interface CreateProjectFormProps {
   data: any;
   state: "submitting" | "idle" | "loading";
   teams: Team[];
+  currentTeamSlug: string;
 }
 
 // used here and in the route
@@ -30,10 +30,8 @@ export function CreateProjectForm({
   data,
   state,
   teams,
+  currentTeamSlug,
 }: CreateProjectFormProps) {
-  const params = useParams();
-
-  const currentTeamSlug = params["teamSlug"] as string;
   const currentTeam = teams.find((t) => t.slug === currentTeamSlug);
 
   return (
