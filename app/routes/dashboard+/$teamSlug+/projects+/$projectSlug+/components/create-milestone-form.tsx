@@ -168,7 +168,7 @@ export function CreateMilestoneForm({
                   key={member}
                   name="assigneesId[]"
                   className="w-5"
-                  value={member}
+                  defaultValue={member}
                   hidden
                 />
               );
