@@ -12,7 +12,7 @@ export const createProjectMilestoneSchema = z.object({
   name: z
     .string({ required_error: "Name is required" })
     .min(2, "Name should be more than 2 characters"),
-  description: z.string().nullable(),
+  description: z.string().nullable().optional(),
   projectId: z
     .union([
       z.number({ required_error: "Project Id is required" }),
@@ -34,7 +34,7 @@ export type ICreateProjectMilestone = z.infer<
   typeof createProjectMilestoneSchema
 >;
 
-export const editMilestoneSchema = createProjectMilestoneSchema.extend({
+export const editMilestoneSchema = z.object({
   id: z
     .union([
       z
@@ -43,6 +43,18 @@ export const editMilestoneSchema = createProjectMilestoneSchema.extend({
       z.number({ required_error: "Milestone is required" }),
     ])
     .transform((v) => Number(v)),
+
+  status: z.enum(statusValues).optional(),
+
+  name: z
+    .string({ required_error: "Name is required" })
+    .min(2, "Name should be more than 2 characters"),
+  description: z.string().nullable().optional(),
+
+  // assignees
+  assigneesId: z
+    .array(z.union([z.number(), z.string()]).transform((v) => Number(v)))
+    .default([]),
 });
 
 export type IEditMilestone = z.infer<typeof editMilestoneSchema>;

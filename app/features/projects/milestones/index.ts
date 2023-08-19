@@ -216,12 +216,16 @@ export async function editMilestone(data: IEditMilestone, userId: number) {
 
   await canEditMilestone(milestoneData.id, userId);
 
-  const valuesToUpdate = removeEmptyFields(milestoneData);
+  const { id, assigneesId, ...valuesToUpdate } =
+    removeEmptyFields(milestoneData);
 
-  await db.update(projectMilestones).set({
-    // ...milestone.project_milestones,
-    ...valuesToUpdate,
-  });
+  await db
+    .update(projectMilestones)
+    .set({
+      // ...milestone.project_milestones,
+      ...valuesToUpdate,
+    })
+    .where(eq(projectMilestones.id, id));
 }
 
 export async function deleteMilestone(data: IDeleteMilestone, userId: number) {
