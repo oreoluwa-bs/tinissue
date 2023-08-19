@@ -8,6 +8,7 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 import styles from "./globals.css";
+import { Toaster } from "./components/ui/toaster";
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -33,6 +34,7 @@ export default function App() {
       </head>
       <body>
         <Outlet />
+        <Toaster />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
