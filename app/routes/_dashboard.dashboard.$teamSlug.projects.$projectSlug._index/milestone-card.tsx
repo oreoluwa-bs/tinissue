@@ -73,6 +73,7 @@ export function MilestoneKanbanCard({
           <div
             className="group mt-5 inline-flex"
             role="button"
+            data-testid="assignee-propover-trigger"
             aria-expanded={openAssignees}
             onClick={(e) => {
               e.preventDefault();

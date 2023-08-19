@@ -1,5 +1,8 @@
-import { render, screen } from "test/utils";
+import { act, render, screen, userEvent, waitFor } from "test/utils";
 import { MilestoneKanbanCard } from "./milestone-card";
+
+const onDeleteAssignee = vi.fn();
+const onAddAssignee = vi.fn();
 
 describe("Milestone Card", () => {
   const milestone = {
@@ -13,7 +16,7 @@ describe("Milestone Card", () => {
     projectId: 1,
   };
 
-  const assignees = [
+  const members = [
     {
       id: 1,
       firstName: "James",
@@ -23,22 +26,59 @@ describe("Milestone Card", () => {
       initials: "JD",
       profilePhoto: "/image.png",
     },
+    {
+      id: 2,
+      firstName: "Mane",
+      lastName: "Doe",
+      email: "md@test.com",
+      fullName: "Manes Doe",
+      initials: "MD",
+      profilePhoto: "/image.png",
+    },
   ];
 
-  it("should render the milestone title/name", () => {
-    render(<MilestoneKanbanCard milestone={milestone} />);
+  const assignees = [members[0]];
 
-    expect(screen.getByText(/Go to School/i)).toBeInTheDocument();
-  });
-
-  it("should render assignees in assignee list", () => {
+  beforeEach(() => {
     render(
       <MilestoneKanbanCard
         milestone={milestone}
         assignees={assignees}
-        members={assignees}
+        members={members}
+        onAddAssignee={onAddAssignee}
+        onDeleteAssignee={onDeleteAssignee}
       />,
     );
+  });
+
+  it("should render the milestone title/name", () => {
+    expect(screen.getByText(/Go to School/i)).toBeInTheDocument();
+  });
+
+  it("should render assignees in assignee list", () => {
     expect(screen.getByText(/JD/i)).toBeInTheDocument();
+  });
+
+  it("should select assignee and call onDelete", async () => {
+    act(() => {
+      userEvent.click(screen.getByTestId("assignee-propover-trigger"));
+    });
+
+    await waitFor(() => {
+      userEvent.click(screen.getByText(members[0].fullName));
+      expect(onDeleteAssignee).toHaveBeenCalled();
+    });
+  });
+
+  it("should select assignee and call onAdd", async () => {
+    act(() => {
+      userEvent.click(screen.getByTestId("assignee-propover-trigger"));
+    });
+
+    await waitFor(() => {
+      userEvent.click(screen.getByText(members[1].fullName));
+      expect(onAddAssignee).toHaveBeenCalled();
+    });
+    // });
   });
 });
