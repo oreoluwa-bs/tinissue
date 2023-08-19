@@ -4,7 +4,7 @@ import {
   // type ActionArgs,
   type LoaderArgs,
 } from "@remix-run/node";
-import { useFetcher, useLoaderData, useParams } from "@remix-run/react";
+import { Link, useFetcher, useLoaderData, useParams } from "@remix-run/react";
 import { requireUserId } from "~/features/auth";
 import { getProject } from "~/features/projects";
 import { getProjectMilestones } from "~/features/projects/milestones";
@@ -22,6 +22,7 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import { useToast } from "~/components/ui/use-toast";
 
 // export async function action({ request }: ActionArgs) {
 //   const userId = await requireUserId(request);
@@ -143,15 +144,26 @@ function Board({
   milestones: ReturnType<typeof useLoaderData<typeof loader>>["milestones"];
   teamSlug: string;
 }) {
+  const { toast } = useToast();
   const [showNewMilestoneDialog, setShowNewMilestoneDialog] = useState(false);
 
   useEffect(() => {
     if (newMilestone.state === "idle" && newMilestone.data) {
       if (!newMilestone.data.fieldErrors && !newMilestone.data.formErrors) {
         setShowNewMilestoneDialog(false);
+      } else {
+        if (
+          newMilestone.data.formErrors &&
+          newMilestone.data.fields.errorAsToast
+        ) {
+          toast({
+            title: "Something went wrong!",
+            description: newMilestone.data.formErrors,
+          });
+        }
       }
     }
-  }, [newMilestone.data, newMilestone.state]);
+  }, [newMilestone.data, newMilestone.state, toast]);
 
   const isCreateSuccess =
     !newMilestone.data?.fieldErrors && !newMilestone.data?.formErrors;
@@ -200,17 +212,60 @@ function Board({
       <div className="mt-4 space-y-4">
         {milestones.map((milestone) => {
           return (
-            <MilestoneKanbanCard
+            <Link
+              to={`/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestone.milestone.id}`}
               key={milestone.milestone.id}
-              milestone={{
-                ...milestone.milestone,
-                createdAt: new Date(milestone.milestone.createdAt),
-                updatedAt: milestone.milestone.updatedAt
-                  ? new Date(milestone.milestone.updatedAt)
-                  : null,
+              className="block"
+              onClick={(e) => {
+                const cliked = e.target as HTMLElement;
+
+                console.log(cliked.getAttribute("role") === "button");
+
+                if (cliked.getAttribute("role") === "button") {
+                  e.preventDefault(); // Prevent anchor navigation
+                  e.stopPropagation(); // Stop event propagation
+                }
               }}
-              assignees={milestone.assignees.filter(Boolean) as any}
-            />
+            >
+              <MilestoneKanbanCard
+                key={milestone.milestone.id}
+                milestone={{
+                  ...milestone.milestone,
+                  createdAt: new Date(milestone.milestone.createdAt),
+                  updatedAt: milestone.milestone.updatedAt
+                    ? new Date(milestone.milestone.updatedAt)
+                    : null,
+                }}
+                assignees={milestone.assignees.filter(Boolean) as any}
+                members={project.members}
+                onAddAssignee={(milestoneId, assigneeId) => {
+                  newMilestone.submit(
+                    {
+                      milestoneId,
+                      "assigneesId[]": [assigneeId],
+                      errorAsToast: true,
+                    },
+                    {
+                      method: "POST",
+                      action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
+                    },
+                  );
+                }}
+                onDeleteAssignee={(milestoneId, assigneeId) => {
+                  newMilestone.submit(
+                    {
+                      milestoneId,
+                      assigneeId: assigneeId,
+                      errorAsToast: true,
+                    },
+                    {
+                      method: "DELETE",
+                      action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
+                    },
+                  );
+                }}
+              />
+            </Link>
           );
         })}
       </div>
