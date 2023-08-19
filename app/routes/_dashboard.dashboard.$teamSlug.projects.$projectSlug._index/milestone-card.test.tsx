@@ -32,7 +32,13 @@ describe("Milestone Card", () => {
   });
 
   it("should render assignees in assignee list", () => {
-    render(<MilestoneKanbanCard milestone={milestone} assignees={assignees} />);
+    render(
+      <MilestoneKanbanCard
+        milestone={milestone}
+        assignees={assignees}
+        members={assignees}
+      />,
+    );
     expect(screen.getByText(/JD/i)).toBeInTheDocument();
   });
 });
