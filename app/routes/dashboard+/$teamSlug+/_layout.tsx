@@ -38,7 +38,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
-import { CreateTeamForm } from "./_dashboard.dashboard.team";
+import { CreateTeamForm } from "../team";
 import { getTeam, getUserTeams } from "~/features/teams";
 import { getUserProfile } from "~/features/user";
 import { cn, generateAvatarGradient } from "~/lib/utils";

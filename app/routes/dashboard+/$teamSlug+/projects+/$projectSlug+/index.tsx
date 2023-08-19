@@ -9,10 +9,10 @@ import { requireUserId } from "~/features/auth";
 import { getProject } from "~/features/projects";
 import { getProjectMilestones } from "~/features/projects/milestones";
 import { statusValues } from "~/features/projects/milestones/shared";
-import { MilestoneKanbanCard } from "./milestone-card";
+import { MilestoneKanbanCard } from "./components/milestone-card";
 import { Button } from "~/components/ui/button";
 import { PlusCircleIcon } from "lucide-react";
-import { CreateMilestoneForm } from "./create-milestone-form";
+import { CreateMilestoneForm } from "./components/create-milestone-form";
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -219,8 +219,6 @@ function Board({
               onClick={(e) => {
                 const cliked = e.target as HTMLElement;
 
-                console.log(cliked.getAttribute("role") === "button");
-
                 if (cliked.getAttribute("role") === "button") {
                   e.preventDefault(); // Prevent anchor navigation
                   e.stopPropagation(); // Stop event propagation
@@ -238,32 +236,32 @@ function Board({
                 }}
                 assignees={milestone.assignees.filter(Boolean) as any}
                 members={project.members}
-                onAddAssignee={(milestoneId, assigneeId) => {
-                  newMilestone.submit(
-                    {
-                      milestoneId,
-                      "assigneesId[]": [assigneeId],
-                      errorAsToast: true,
-                    },
-                    {
-                      method: "POST",
-                      action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
-                    },
-                  );
-                }}
-                onDeleteAssignee={(milestoneId, assigneeId) => {
-                  newMilestone.submit(
-                    {
-                      milestoneId,
-                      assigneeId: assigneeId,
-                      errorAsToast: true,
-                    },
-                    {
-                      method: "DELETE",
-                      action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
-                    },
-                  );
-                }}
+                // onAddAssignee={(milestoneId, assigneeId) => {
+                //   newMilestone.submit(
+                //     {
+                //       milestoneId,
+                //       "assigneesId[]": [assigneeId],
+                //       errorAsToast: true,
+                //     },
+                //     {
+                //       method: "POST",
+                //       action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
+                //     },
+                //   );
+                // }}
+                // onDeleteAssignee={(milestoneId, assigneeId) => {
+                //   newMilestone.submit(
+                //     {
+                //       milestoneId,
+                //       assigneeId: assigneeId,
+                //       errorAsToast: true,
+                //     },
+                //     {
+                //       method: "DELETE",
+                //       action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
+                //     },
+                //   );
+                // }}
               />
             </Link>
           );

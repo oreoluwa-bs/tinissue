@@ -170,7 +170,7 @@ function DisplayMilestone({
   useEffect(() => {
     if (fetcher.data && fetcher.state === "idle") {
       if (fetcher.data.fieldErrors) {
-        console.log(fetcher.data.fieldErrors);
+        // console.log(fetcher.data.fieldErrors);
         toast({
           title: "Something went wrong",
           description: Object.entries(fetcher.data.fieldErrors)
@@ -179,7 +179,7 @@ function DisplayMilestone({
         });
       }
       if (fetcher.data.formErrors) {
-        console.log(fetcher.data.formErrors);
+        // console.log(fetcher.data.formErrors);
         toast({
           title: "Something went wrong",
           description: fetcher.data.formErrors,

@@ -77,6 +77,7 @@ export function MilestoneKanbanCard({
             aria-expanded={openAssignees}
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               setOpenAssignees(true);
             }}
           >
@@ -123,12 +124,15 @@ export function MilestoneKanbanCard({
                 return (
                   <CommandItem
                     key={member.id}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
                     onSelect={() => {
                       if (isSelected) {
                         onDeleteAssignee(milestone.id, member.id);
                         return;
                       }
-
                       onAddAssignee(milestone.id, member.id);
                     }}
                   >

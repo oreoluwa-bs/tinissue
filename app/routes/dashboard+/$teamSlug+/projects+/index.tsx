@@ -27,8 +27,8 @@ import { requireUserId } from "~/features/auth";
 import { createProject, getUserTeamProjects } from "~/features/projects";
 import { createProjectSchema } from "~/features/projects/shared";
 import { getUserTeams } from "~/features/teams";
-import { CreateProjectForm } from "./create-project-form";
-import { ProjectCard } from "./project-card";
+import { CreateProjectForm } from "./components/create-project-form";
+import { ProjectCard } from "./components/project-card";
 import { Input } from "~/components/ui/input";
 
 export async function action({ request }: ActionArgs) {
