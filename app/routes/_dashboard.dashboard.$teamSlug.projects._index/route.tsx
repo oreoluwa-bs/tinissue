@@ -120,16 +120,15 @@ export default function Index() {
   const newProject = useFetcher();
 
   useEffect(() => {
-    if (
-      showNewProjectDialog &&
-      newProject.state === "idle" &&
-      newProject.data
-    ) {
+    if (newProject.state === "idle" && newProject.data) {
       if (!newProject.data.fieldErrors && !newProject.data.formErrors) {
         setShowNewProjectDialog(false);
       }
     }
-  }, [newProject, newProject.data, newProject.state, showNewProjectDialog]);
+  }, [newProject, newProject.data, newProject.state]);
+
+  const isCreateSuccess =
+    !newProject.data?.fieldErrors && !newProject.data?.formErrors;
 
   return (
     <main className="py-6">
@@ -163,7 +162,7 @@ export default function Index() {
             <CreateProjectForm
               teams={loaderData.teams as unknown as Team[]}
               Form={newProject.Form}
-              data={newProject.data}
+              data={!isCreateSuccess ? newProject.data : {}}
               state={newProject.state}
               currentTeamSlug={params["teamSlug"] as string}
             />

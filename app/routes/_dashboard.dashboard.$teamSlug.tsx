@@ -175,14 +175,15 @@ function TeamSwitcher({
   const newTeam = useFetcher();
 
   useEffect(() => {
-    if (showNewTeamDialog && newTeam.state === "idle" && newTeam.data) {
-      console.log(newTeam);
-
+    if (newTeam.state === "idle" && newTeam.data) {
       if (!newTeam.data.fieldErrors && !newTeam.data.formErrors) {
         setShowNewTeamDialog(false);
       }
     }
-  }, [newTeam, newTeam.data, newTeam.state, showNewTeamDialog]);
+  }, [newTeam, newTeam.data, newTeam.state]);
+
+  const isCreateSuccess =
+    !newTeam.data?.fieldErrors && !newTeam.data?.formErrors;
 
   return (
     <Dialog open={showNewTeamDialog} onOpenChange={setShowNewTeamDialog}>
@@ -299,7 +300,8 @@ function TeamSwitcher({
 
         <CreateTeamForm
           Form={newTeam.Form}
-          data={newTeam.data}
+          // This is so when you click it again the form data has been cleared
+          data={!isCreateSuccess ? newTeam.data : {}}
           state={newTeam.state}
         />
       </DialogContent>

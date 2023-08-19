@@ -146,16 +146,15 @@ function Board({
   const [showNewMilestoneDialog, setShowNewMilestoneDialog] = useState(false);
 
   useEffect(() => {
-    if (
-      showNewMilestoneDialog &&
-      newMilestone.state === "idle" &&
-      newMilestone.data
-    ) {
+    if (newMilestone.state === "idle" && newMilestone.data) {
       if (!newMilestone.data.fieldErrors && !newMilestone.data.formErrors) {
         setShowNewMilestoneDialog(false);
       }
     }
-  }, [newMilestone.data, newMilestone.state, showNewMilestoneDialog]);
+  }, [newMilestone.data, newMilestone.state]);
+
+  const isCreateSuccess =
+    !newMilestone.data?.fieldErrors && !newMilestone.data?.formErrors;
 
   return (
     <div
@@ -172,7 +171,7 @@ function Board({
         >
           <DialogTrigger asChild>
             <Button variant="ghost">
-              <PlusCircleIcon />
+              <PlusCircleIcon className="h-5 w-5" />
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -182,9 +181,10 @@ function Board({
                 Add a new project to your team
               </DialogDescription>
             </DialogHeader>
+
             <CreateMilestoneForm
               Form={newMilestone.Form}
-              data={newMilestone.data}
+              data={!isCreateSuccess ? newMilestone.data : {}}
               state={newMilestone.state}
               project={{
                 ...project.project,
