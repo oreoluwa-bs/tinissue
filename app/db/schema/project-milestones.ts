@@ -1,7 +1,7 @@
 import {
   int,
   mysqlTable,
-  // primaryKey,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -63,7 +63,6 @@ export const projectMilestoneRelations = relations(
 export const projectMilestoneAssignees = mysqlTable(
   "milestone_assignees",
   {
-    id: int("id").autoincrement().primaryKey(),
     userId: int("user_id")
       .notNull()
       .references(() => users.id, { onUpdate: "cascade", onDelete: "cascade" }),
@@ -75,8 +74,8 @@ export const projectMilestoneAssignees = mysqlTable(
       }),
   },
   (t) => ({
-    // pk: primaryKey(t.userId, t.projectId),
-    sk: uniqueIndex("sk_idx").on(t.userId, t.projectMilestoneId),
+    pk: primaryKey(t.userId, t.projectMilestoneId),
+    // sk: uniqueIndex("sk_idx").on(t.userId, t.projectMilestoneId),
   }),
 );
 

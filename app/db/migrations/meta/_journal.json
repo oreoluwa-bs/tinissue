@@ -71,6 +71,13 @@
       "when": 1691967063745,
       "tag": "0009_noisy_sauron",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1692417342650,
+      "tag": "0010_amusing_guardsmen",
+      "breakpoints": true
     }
   ]
 }
