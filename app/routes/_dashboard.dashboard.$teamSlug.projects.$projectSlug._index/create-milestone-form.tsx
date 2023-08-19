@@ -83,7 +83,7 @@ export function CreateMilestoneForm({
       <Form
         ref={ref}
         method="POST"
-        action={`/dashboard/${teamSlug}/projects/${project.slug}/milestones`}
+        action={`/dashboard/${teamSlug}/projects/${project.slug}/milestones?index`}
       >
         <input
           type="number"
