@@ -25,7 +25,9 @@ export const createProjectMilestoneSchema = z.object({
   status: z.enum(statusValues),
 
   // assignees
-  assigneesId: z.array(z.number()).default([]),
+  assigneesId: z
+    .array(z.union([z.number(), z.string()]).transform((v) => Number(v)))
+    .default([]),
 });
 
 export type ICreateProjectMilestone = z.infer<

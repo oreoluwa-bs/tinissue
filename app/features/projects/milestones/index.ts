@@ -63,13 +63,13 @@ export async function getProjectMilestones(projectIdOrSlug: number | string) {
       assignees: userSelect(users),
     })
     .from(projectMilestones)
-    .innerJoin(
-      projects,
+    .where(
       or(
         eq(projects.id, projectIdOrSlug as number),
         eq(projects.slug, projectIdOrSlug as string),
       ),
     )
+    .innerJoin(projects, eq(projects.id, projectMilestones.projectId))
     .leftJoin(
       projectMilestoneAssignees,
       eq(projectMilestoneAssignees.projectMilestoneId, projectMilestones.id),
