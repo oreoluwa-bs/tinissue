@@ -111,7 +111,7 @@ export function MilestoneKanbanCard({
             {/* <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
           </div>
         </PopoverTrigger>
-        <PopoverContent>
+        <PopoverContent data-stop-propagation>
           <Command>
             <CommandInput placeholder="Search Members..." className="h-9" />
             {/* <CommandEmpty>No framework found.</CommandEmpty> */}
@@ -124,10 +124,6 @@ export function MilestoneKanbanCard({
                 return (
                   <CommandItem
                     key={member.id}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
                     onSelect={() => {
                       if (isSelected) {
                         onDeleteAssignee(milestone.id, member.id);

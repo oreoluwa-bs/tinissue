@@ -217,12 +217,7 @@ function Board({
               key={milestone.milestone.id}
               className="block"
               onClick={(e) => {
-                const cliked = e.target as HTMLElement;
-
-                if (cliked.getAttribute("role") === "button") {
-                  e.preventDefault(); // Prevent anchor navigation
-                  e.stopPropagation(); // Stop event propagation
-                }
+                blockPropagation(e);
               }}
             >
               <MilestoneKanbanCard
@@ -236,32 +231,32 @@ function Board({
                 }}
                 assignees={milestone.assignees.filter(Boolean) as any}
                 members={project.members}
-                // onAddAssignee={(milestoneId, assigneeId) => {
-                //   newMilestone.submit(
-                //     {
-                //       milestoneId,
-                //       "assigneesId[]": [assigneeId],
-                //       errorAsToast: true,
-                //     },
-                //     {
-                //       method: "POST",
-                //       action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
-                //     },
-                //   );
-                // }}
-                // onDeleteAssignee={(milestoneId, assigneeId) => {
-                //   newMilestone.submit(
-                //     {
-                //       milestoneId,
-                //       assigneeId: assigneeId,
-                //       errorAsToast: true,
-                //     },
-                //     {
-                //       method: "DELETE",
-                //       action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
-                //     },
-                //   );
-                // }}
+                onAddAssignee={(milestoneId, assigneeId) => {
+                  newMilestone.submit(
+                    {
+                      milestoneId,
+                      "assigneesId[]": [assigneeId],
+                      errorAsToast: true,
+                    },
+                    {
+                      method: "POST",
+                      action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
+                    },
+                  );
+                }}
+                onDeleteAssignee={(milestoneId, assigneeId) => {
+                  newMilestone.submit(
+                    {
+                      milestoneId,
+                      assigneeId: assigneeId,
+                      errorAsToast: true,
+                    },
+                    {
+                      method: "DELETE",
+                      action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
+                    },
+                  );
+                }}
               />
             </Link>
           );
@@ -269,4 +264,22 @@ function Board({
       </div>
     </div>
   );
+}
+
+function blockPropagation(e: React.MouseEvent<HTMLElement, MouseEvent>) {
+  let clickedElement = e.target as HTMLElement | null;
+
+  while (clickedElement) {
+    if (clickedElement.getAttribute("data-stop-propagation")) {
+      // The clicked element or one of its parents has the stop-prop data attribute.
+      // console.log("stopped");
+      e.preventDefault(); // Prevent anchor navigation
+      e.stopPropagation(); // Stop event propagation
+    }
+
+    if (e.currentTarget === clickedElement) {
+      clickedElement = null;
+    }
+    clickedElement = clickedElement?.parentElement ?? null;
+  }
 }
