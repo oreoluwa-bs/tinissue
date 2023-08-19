@@ -47,7 +47,25 @@ export const editMilestoneSchema = createProjectMilestoneSchema.extend({
 
 export type IEditMilestone = z.infer<typeof editMilestoneSchema>;
 
-// ASSIGNESS
+export const deleteMilestoneSchema = z.object({
+  id: z
+    .union([
+      z
+        .string({ required_error: "Milestone is requred" })
+        .min(1, "Milestone is required"),
+      z.number({ required_error: "Milestone is required" }),
+    ])
+    .transform((v) => Number(v)),
+});
+export type IDeleteMilestone = z.infer<typeof deleteMilestoneSchema>;
+
+/**
+ *
+ *
+ *
+ * ASSSIGNEEES
+ */
+
 export const createAssigneesSchema = z.object({
   milestoneId: z
     .union([

@@ -3,12 +3,14 @@ import type {
   ICreateAssignees,
   ICreateProjectMilestone,
   IDeleteAssignee,
+  IDeleteMilestone,
   IEditMilestone,
 } from "./shared";
 import {
   createAssigneesSchema,
   createProjectMilestoneSchema,
   deleteAssigneeSchema,
+  deleteMilestoneSchema,
   editMilestoneSchema,
 } from "./shared";
 import { slugifyAndAddRandomSuffix } from "~/features/teams";
@@ -113,6 +115,62 @@ export async function getProjectMilestones(projectIdOrSlug: number | string) {
   return Object.values(groupedMilestones);
 }
 
+export async function getProjectMilestone(projectIdOrSlug: number | string) {
+  //   const milestones = await db.query.projectMilestones.findMany({
+  //     where(fields, operators) {
+  //       return operators.or(
+  //         operators.eq(fields.projectId, projectIdOrSlug as number),
+  //         operators.eq(fields.slug, projectIdOrSlug as string),
+  //       );
+  //     },
+  //     with: {
+  //       assignees: true,
+  //     },
+  //   });
+
+  const milestones = await db
+    .select({
+      milestones: projectMilestones,
+      assignees: userSelect(users),
+    })
+    .from(projectMilestones)
+    .where(
+      or(
+        eq(projectMilestones.id, projectIdOrSlug as number),
+        eq(projectMilestones.slug, projectIdOrSlug as string),
+      ),
+    )
+    .leftJoin(
+      projectMilestoneAssignees,
+      eq(projectMilestoneAssignees.projectMilestoneId, projectMilestones.id),
+    )
+    .leftJoin(users, eq(projectMilestoneAssignees.userId, users.id));
+
+  const groupedMilestones = milestones.reduce(
+    (acc, milestone) => {
+      const prevAssign = acc[milestone.milestones.id]?.assignees ?? [];
+
+      acc[milestone.milestones.id] = {
+        milestone: milestone.milestones,
+        // @ts-ignore
+        assignees: milestone.assignees
+          ? // @ts-ignore
+            [...prevAssign, milestone.assignees]
+          : prevAssign,
+      };
+      return acc;
+    },
+    {} as {
+      [k: string]: {
+        milestone: (typeof milestones)[0]["milestones"];
+        assignees: (typeof milestones)[0]["assignees"][];
+      };
+    },
+  );
+
+  return Object.values(groupedMilestones)[0];
+}
+
 // function groupMilestonesWithAssignees(data: any) {
 //   const groupedData = {};
 
@@ -165,6 +223,21 @@ export async function editMilestone(data: IEditMilestone, userId: number) {
     ...valuesToUpdate,
   });
 }
+
+export async function deleteMilestone(data: IDeleteMilestone, userId: number) {
+  const milestoneData = deleteMilestoneSchema.parse(data);
+
+  await canEditMilestone(milestoneData.id, userId);
+
+  await db
+    .delete(projectMilestones)
+    .where(eq(projectMilestones.id, milestoneData.id));
+}
+
+/**
+ *
+ * ASSIGNEESS
+ */
 
 export async function createAssignees(data: ICreateAssignees, userId: number) {
   const assigneesData = createAssigneesSchema.parse(data);
