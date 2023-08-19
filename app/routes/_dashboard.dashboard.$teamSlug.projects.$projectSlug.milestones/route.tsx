@@ -12,7 +12,9 @@ export async function action({ request }: ActionArgs) {
     case "POST":
       const credentials = createProjectMilestoneSchema.safeParse({
         ...formObject,
-        ...(formObject.teamId && { teamId: Number(formObject.teamId) }),
+        ...(formData.getAll("assigneesId[]").length > 0 && {
+          assigneesId: formData.getAll("assigneesId[]"),
+        }),
       });
 
       if (!credentials.success) {

@@ -1,10 +1,23 @@
 import type { Form } from "@remix-run/react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckIcon } from "lucide-react";
+import { useRef, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "~/components/ui/command";
 import { FormError } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -15,6 +28,7 @@ import {
 } from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
 import { statusValues } from "~/features/projects/milestones/shared";
+import { cn } from "~/lib/utils";
 
 interface CreateMilestoneFormProps {
   Form: typeof Form;
@@ -25,6 +39,7 @@ interface CreateMilestoneFormProps {
     id: number;
     fullName: string;
     firstName: string | null;
+    initials: string;
     lastName: string | null;
     profilePhoto: string;
   }[];
@@ -41,6 +56,20 @@ export function CreateMilestoneForm({
   status = "BACKLOG",
   teamSlug,
 }: CreateMilestoneFormProps) {
+  const ref = useRef<HTMLFormElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const [assignedMembers, setAssignedMembers] = useState<number[]>(
+    data?.fields?.assigneesId ?? [],
+  );
+
+  // useEffect(() => {
+  //   if (state === "idle" && data) {
+  //     if (!data.fieldErrors && !data.formErrors) {
+  //       ref.current?.reset();
+  //     }
+  //   }
+  // }, [data, state]);
+
   return (
     <>
       {(data?.formErrors?.length ?? 0) > 0 ? (
@@ -52,6 +81,7 @@ export function CreateMilestoneForm({
       ) : null}
 
       <Form
+        ref={ref}
         method="POST"
         action={`/dashboard/${teamSlug}/projects/${project.slug}/milestones`}
       >
@@ -126,6 +156,101 @@ export function CreateMilestoneForm({
               aria-errormessage={data?.fieldErrors?.description?.join(", ")}
             />
             <FormError>{data?.fieldErrors?.description}</FormError>
+          </div>
+
+          <div>
+            <Label htmlFor="assignees" className="mb-2">
+              Assignees
+            </Label>
+            {assignedMembers.map((member) => {
+              return (
+                <input
+                  key={member}
+                  name="assigneesId[]"
+                  className="w-5"
+                  value={member}
+                  hidden
+                />
+              );
+            })}
+            <div>
+              <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    name="assignees"
+                    type="button"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={open}
+                  >
+                    {assignedMembers.length > 0
+                      ? assignedMembers.map((value) => {
+                          const member = members.find(
+                            (framework) => framework.id === value,
+                          );
+
+                          return (
+                            <Avatar
+                              key={member?.id}
+                              className="mr-2 h-6 w-6 text-xs"
+                            >
+                              <AvatarImage
+                                src={member?.profilePhoto}
+                                alt={member?.fullName}
+                              />
+                              <AvatarFallback>
+                                {member?.initials}
+                              </AvatarFallback>
+                            </Avatar>
+                          );
+                        })
+                      : "Select Assignees"}
+                    {/* <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent>
+                  <Command>
+                    <CommandInput
+                      placeholder="Search Assignees..."
+                      className="h-9"
+                    />
+                    {/* <CommandEmpty>No framework found.</CommandEmpty> */}
+                    <CommandGroup>
+                      {members.map((member) => {
+                        const isSelected = assignedMembers.includes(member.id);
+
+                        return (
+                          <CommandItem
+                            key={member.id}
+                            onSelect={() => {
+                              setAssignedMembers((prev) => {
+                                const exists = prev.includes(member.id);
+
+                                if (exists) {
+                                  return prev.filter((v) => v !== member.id);
+                                }
+
+                                return [...prev, member.id];
+                              });
+                              // setOpen(false)
+                            }}
+                          >
+                            {member.fullName}
+                            <CheckIcon
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                isSelected ? "opacity-100" : "opacity-0",
+                              )}
+                            />
+                          </CommandItem>
+                        );
+                      })}
+                    </CommandGroup>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+            <FormError>{data?.fieldErrors?.assigneesId}</FormError>
           </div>
 
           <div>
