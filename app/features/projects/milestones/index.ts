@@ -1,6 +1,16 @@
 import { db } from "~/db/db.server";
-import type { ICreateProjectMilestone, IEditMilestone } from "./shared";
-import { createProjectMilestoneSchema, editMilestoneSchema } from "./shared";
+import type {
+  ICreateAssignees,
+  ICreateProjectMilestone,
+  IDeleteAssignee,
+  IEditMilestone,
+} from "./shared";
+import {
+  createAssigneesSchema,
+  createProjectMilestoneSchema,
+  deleteAssigneeSchema,
+  editMilestoneSchema,
+} from "./shared";
 import { slugifyAndAddRandomSuffix } from "~/features/teams";
 import {
   projectMilestoneAssignees,
@@ -135,6 +145,8 @@ async function canEditMilestone(milestoneId: number, userId: number) {
       ),
     );
 
+  console.log(milestone);
+
   if (milestone.length < 1 || !milestone[0])
     throw new Error("You are not authorized");
 
@@ -152,4 +164,36 @@ export async function editMilestone(data: IEditMilestone, userId: number) {
     // ...milestone.project_milestones,
     ...valuesToUpdate,
   });
+}
+
+export async function createAssignees(data: ICreateAssignees, userId: number) {
+  const assigneesData = createAssigneesSchema.parse(data);
+
+  // await canEditMilestone(assigneesData.milestoneId, userId);
+
+  assigneesData.assigneesId.length > 0 &&
+    (await db.insert(projectMilestoneAssignees).values(
+      assigneesData.assigneesId.map((aId) => ({
+        projectMilestoneId: assigneesData.milestoneId,
+        userId: aId,
+      })),
+    ));
+}
+
+export async function deleteAssignees(data: IDeleteAssignee, userId: number) {
+  const assigneeData = deleteAssigneeSchema.parse(data);
+
+  // await canEditMilestone(assigneeData.milestoneId, userId);
+
+  await db
+    .delete(projectMilestoneAssignees)
+    .where(
+      and(
+        eq(
+          projectMilestoneAssignees.projectMilestoneId,
+          assigneeData.milestoneId,
+        ),
+        eq(projectMilestoneAssignees.userId, assigneeData.assigneeId),
+      ),
+    );
 }
