@@ -19,6 +19,8 @@ import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { requireUserId } from "~/features/auth";
 import { getProject } from "~/features/projects";
+import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 export async function loader({ params, request }: LoaderArgs) {
   const userId = await requireUserId(request);
@@ -81,7 +83,13 @@ function EditProjectForm({ project, teamSlug }: EditProjectFormProps) {
   return (
     <div>
       <h3 className="mb-4 text-xl">Edit Project</h3>
-
+      {(fetcher.data?.formErrors?.length ?? 0) > 0 ? (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{fetcher.data?.formErrors}</AlertDescription>
+        </Alert>
+      ) : null}
       <fetcher.Form
         method="PATCH"
         action={`/dashboard/${teamSlug}/projects/${project.slug}`}
@@ -153,6 +161,14 @@ function DeleteProject({ project, teamSlug }: BaseSettingsProps) {
         platform. This action is not reversible, so please continue with
         caution.
       </p>
+
+      {(fetcher.data?.formErrors?.length ?? 0) > 0 ? (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{fetcher.data?.formErrors}</AlertDescription>
+        </Alert>
+      ) : null}
 
       {fetcher.data?.fieldErrors?.id && (
         <FormError>{fetcher.data?.fieldErrors?.id}</FormError>

@@ -2,7 +2,7 @@ import { and, eq, isNotNull, or, sql } from "drizzle-orm";
 import { db } from "~/db/db.server";
 import { projectMembers, projects } from "~/db/schema/projects";
 import { users } from "~/db/schema/users";
-import { slugifyAndAddRandomSuffix } from "../teams";
+import { getTeamMember, slugifyAndAddRandomSuffix } from "../teams";
 import {
   createProjectSchema,
   type IEditProject,
@@ -11,9 +11,20 @@ import {
 } from "./shared";
 import { userSelect } from "../user/utils";
 import { removeEmptyFields } from "~/lib/utils";
+import { defineAbilityFor } from "./permissions";
+import { defineAbilityFor as defineTeamAbilityFor } from "../teams/permissions";
 
 export async function createProject(data: ICreateProject, creatorId: number) {
   const projectData = createProjectSchema.parse(data);
+
+  const teamMember = await getTeamMember(projectData.teamId, creatorId);
+  const ability = defineTeamAbilityFor(teamMember);
+
+  if (ability.cannot("create", "Project")) {
+    throw new Error(
+      "You do not have permission to create a project in this team",
+    );
+  }
 
   await db.transaction(async (tx) => {
     const slug = slugifyAndAddRandomSuffix(projectData.name);
@@ -37,7 +48,7 @@ export async function createProject(data: ICreateProject, creatorId: number) {
       projectId: newProject.id,
       userId: creatorId,
       teamId: projectData.teamId,
-      //   role: "",
+      role: "OWNER",
     });
   });
 }
@@ -111,9 +122,17 @@ export async function getProject(idOrSlug: string | number) {
 export async function editProject(data: IEditProject, userId: number) {
   const projectData = editProjectSchema.parse(data);
 
-  // await canEditMilestone(milestoneData.id, userId);
-
   const { id, ...valuesToUpdate } = removeEmptyFields(projectData);
+
+  // await canEditMilestone(milestoneData.id, userId);
+  // user Info
+  const projectMember = await getProjectMember(id, userId);
+
+  const ability = defineAbilityFor(projectMember);
+
+  if (ability.cannot("edit", "Project")) {
+    throw new Error("You do not have permission to edit this project");
+  }
 
   await db
     .update(projects)
@@ -122,7 +141,27 @@ export async function editProject(data: IEditProject, userId: number) {
 }
 
 export async function deleteProject(id: number, userId: number) {
-  // await canEditMilestone(milestoneData.id, userId);
+  const projectMember = await getProjectMember(id, userId);
+
+  const ability = defineAbilityFor(projectMember);
+
+  if (ability.cannot("delete", "Project")) {
+    throw new Error("You do not have permission to delete this project");
+  }
 
   await db.delete(projects).where(eq(projects.id, id));
+}
+
+async function getProjectMember(projectId: number, userId: number) {
+  return (
+    await db
+      .select()
+      .from(projectMembers)
+      .where(
+        and(
+          eq(projectMembers.projectId, projectId),
+          eq(projectMembers.userId, userId),
+        ),
+      )
+  )[0];
 }
