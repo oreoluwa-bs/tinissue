@@ -62,6 +62,9 @@ export const projectMembers = mysqlTable(
         onUpdate: "cascade",
         onDelete: "cascade",
       }),
+    role: text("role", { enum: ["OWNER", "ADMIN", "MEMBER"] }).default(
+      "MEMBER",
+    ),
   },
   (t) => ({
     pk: primaryKey(t.userId, t.teamId, t.projectId),
