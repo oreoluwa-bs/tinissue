@@ -5,7 +5,7 @@ import { cn } from "~/lib/utils";
 
 export default function SettingsLayout() {
   return (
-    <div className="grid gap-6 py-6 md:grid-cols-[150px_1fr]">
+    <div className="grid gap-6 py-6 md:grid-cols-[200px_1fr]">
       {/* height of sticky nav */}
       <aside className="sticky top-[105px] self-start">
         <Sidebar />
@@ -19,7 +19,7 @@ export default function SettingsLayout() {
 
 const routes = [
   {
-    url: () => `/`,
+    url: () => ``,
     id: "general-settings",
     label: "General",
     //   icon: LayoutDashboard,
