@@ -1,7 +1,7 @@
 import { db } from "~/db/db.server";
 import { createTeamSchema, type ICreateTeam } from "./shared";
 import { teamMembers, teams } from "~/db/schema/teams";
-import { eq, or } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 
 export function slugifyAndAddRandomSuffix(
   str: string,
@@ -70,4 +70,15 @@ export async function getTeam(idOrSlug: string | number) {
   )[0];
 
   return team;
+}
+
+export async function getTeamMember(teamId: number, userId: number) {
+  return (
+    await db
+      .select()
+      .from(teamMembers)
+      .where(
+        and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId)),
+      )
+  )[0];
 }

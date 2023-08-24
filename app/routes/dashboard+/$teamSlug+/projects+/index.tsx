@@ -70,7 +70,7 @@ export async function action({ request }: ActionArgs) {
           {
             fields: formObject,
             fieldErrors: null,
-            formErrors: "Invalid Email/Password",
+            formErrors: error instanceof Error ? error.message : error,
           },
           { status: 400 },
         );
