@@ -3,8 +3,14 @@ import { db } from "~/db/db.server";
 import { projectMembers, projects } from "~/db/schema/projects";
 import { users } from "~/db/schema/users";
 import { slugifyAndAddRandomSuffix } from "../teams";
-import { createProjectSchema, type ICreateProject } from "./shared";
+import {
+  createProjectSchema,
+  type IEditProject,
+  type ICreateProject,
+  editProjectSchema,
+} from "./shared";
 import { userSelect } from "../user/utils";
+import { removeEmptyFields } from "~/lib/utils";
 
 export async function createProject(data: ICreateProject, creatorId: number) {
   const projectData = createProjectSchema.parse(data);
@@ -100,4 +106,23 @@ export async function getProject(idOrSlug: string | number) {
   };
 
   return project;
+}
+
+export async function editProject(data: IEditProject, userId: number) {
+  const projectData = editProjectSchema.parse(data);
+
+  // await canEditMilestone(milestoneData.id, userId);
+
+  const { id, ...valuesToUpdate } = removeEmptyFields(projectData);
+
+  await db
+    .update(projects)
+    .set({ ...valuesToUpdate })
+    .where(eq(projects.id, id));
+}
+
+export async function deleteProject(id: number, userId: number) {
+  // await canEditMilestone(milestoneData.id, userId);
+
+  await db.delete(projects).where(eq(projects.id, id));
 }
