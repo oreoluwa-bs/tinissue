@@ -1,12 +1,13 @@
 import {
   json,
   // redirect,
-  // type ActionArgs,
+  type ActionArgs,
   type LoaderArgs,
+  redirect,
 } from "@remix-run/node";
 import { Link, useFetcher, useLoaderData, useParams } from "@remix-run/react";
 import { requireUserId } from "~/features/auth";
-import { getProject } from "~/features/projects";
+import { editProject, getProject, deleteProject } from "~/features/projects";
 import { getProjectMilestones } from "~/features/projects/milestones";
 import { statusValues } from "~/features/projects/milestones/shared";
 import { MilestoneKanbanCard } from "./components/milestone-card";
@@ -23,63 +24,81 @@ import {
 } from "~/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { useToast } from "~/components/ui/use-toast";
+import { editProjectSchema } from "~/features/projects/shared";
 
-// export async function action({ request }: ActionArgs) {
-//   const userId = await requireUserId(request);
-//   const formData = await request.formData();
-//   const formObject = Object.fromEntries(formData) as { [x: string]: any };
+export async function action({ params, request }: ActionArgs) {
+  const userId = await requireUserId(request);
+  const formData = await request.formData();
+  const formObject = Object.fromEntries(formData) as { [x: string]: any };
 
-//   switch (request.method) {
-//     case "POST":
-//       const credentials = createProjectSchema.safeParse({
-//         ...formObject,
-//         ...(formObject.teamId && { teamId: Number(formObject.teamId) }),
-//       });
+  const method = request.method;
+  const project = (await getProject(params.projectSlug as string)).project;
+  if (method === "PATCH") {
+    const credentials = editProjectSchema.safeParse({
+      ...formObject,
+      id: project.id,
+    });
 
-//       if (!credentials.success) {
-//         return json(
-//           {
-//             fields: formObject,
-//             fieldErrors: credentials.error.flatten().fieldErrors,
-//             formErrors: credentials.error.flatten().formErrors.join(", "),
-//           },
-//           { status: 400 },
-//         );
-//       }
+    if (!credentials.success) {
+      return json(
+        {
+          fields: formObject,
+          fieldErrors: credentials.error.flatten().fieldErrors,
+          formErrors: credentials.error.flatten().formErrors.join(", "),
+        },
+        { status: 400 },
+      );
+    }
 
-//       try {
-//         await createProject(credentials.data, userId);
+    try {
+      await editProject(credentials.data, userId);
 
-//         return json(
-//           {
-//             fields: formObject,
-//             fieldErrors: null,
-//             formErrors: null,
-//           },
-//           { status: 201 },
-//         );
-//       } catch (error) {
-//         return json(
-//           {
-//             fields: formObject,
-//             fieldErrors: null,
-//             formErrors: "Invalid Email/Password",
-//           },
-//           { status: 400 },
-//         );
-//       }
+      return json(
+        {
+          fields: formObject,
+          fieldErrors: null,
+          formErrors: null,
+        },
+        { status: 200 },
+      );
+    } catch (error) {
+      return json(
+        {
+          fields: formObject,
+          fieldErrors: null,
+          formErrors: error instanceof Error ? error.message : error,
+        },
+        { status: 400 },
+      );
+    }
+  }
 
-//     default:
-//       return json(
-//         {
-//           fields: formObject,
-//           fieldErrors: null,
-//           formErrors: "Method not found",
-//         },
-//         { status: 400 },
-//       );
-//   }
-// }
+  if (method === "DELETE") {
+    try {
+      await deleteProject(project.id, userId);
+
+      return redirect(`/dashboard/${params.teamSlug}/projects`);
+    } catch (error) {
+      return json(
+        {
+          fields: formObject,
+          fieldErrors: null,
+          formErrors: error instanceof Error ? error.message : error,
+        },
+        { status: 400 },
+      );
+    }
+  }
+
+  return json(
+    {
+      fields: formObject,
+      fieldErrors: null,
+      formErrors: "Method not found",
+    },
+    { status: 400 },
+  );
+}
 
 export async function loader({ params, request }: LoaderArgs) {
   const userId = await requireUserId(request);
