@@ -152,7 +152,7 @@ export async function deleteProject(id: number, userId: number) {
   await db.delete(projects).where(eq(projects.id, id));
 }
 
-async function getProjectMember(projectId: number, userId: number) {
+export async function getProjectMember(projectId: number, userId: number) {
   return (
     await db
       .select()

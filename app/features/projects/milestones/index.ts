@@ -23,6 +23,8 @@ import {
 import { and, eq, or } from "drizzle-orm";
 import { userSelect } from "~/features/user/utils";
 import { removeEmptyFields } from "~/lib/utils";
+import { getProjectMember } from "../index";
+import { defineAbilityFor } from "./permissions";
 
 export async function createMilestone(data: ICreateProjectMilestone) {
   const projectData = createProjectMilestoneSchema.parse(data);
@@ -115,12 +117,12 @@ export async function getProjectMilestones(projectIdOrSlug: number | string) {
   return Object.values(groupedMilestones);
 }
 
-export async function getProjectMilestone(projectIdOrSlug: number | string) {
+export async function getProjectMilestone(milestoneIdOrSlug: number | string) {
   //   const milestones = await db.query.projectMilestones.findMany({
   //     where(fields, operators) {
   //       return operators.or(
-  //         operators.eq(fields.projectId, projectIdOrSlug as number),
-  //         operators.eq(fields.slug, projectIdOrSlug as string),
+  //         operators.eq(fields.projectId, milestoneIdOrSlug as number),
+  //         operators.eq(fields.slug, milestoneIdOrSlug as string),
   //       );
   //     },
   //     with: {
@@ -136,8 +138,8 @@ export async function getProjectMilestone(projectIdOrSlug: number | string) {
     .from(projectMilestones)
     .where(
       or(
-        eq(projectMilestones.id, projectIdOrSlug as number),
-        eq(projectMilestones.slug, projectIdOrSlug as string),
+        eq(projectMilestones.id, milestoneIdOrSlug as number),
+        eq(projectMilestones.slug, milestoneIdOrSlug as string),
       ),
     )
     .leftJoin(
@@ -190,31 +192,44 @@ export async function getProjectMilestone(projectIdOrSlug: number | string) {
 //   return Object.values(groupedData);
 // }
 
-async function canEditMilestone(milestoneId: number, userId: number) {
-  const milestone = await db
-    .select()
-    .from(projectMilestones)
-    .where(eq(projectMilestones.id, milestoneId))
-    .innerJoin(
-      projectMilestoneAssignees,
-      and(
-        eq(projectMilestoneAssignees.projectMilestoneId, milestoneId),
-        eq(projectMilestoneAssignees.userId, userId),
-      ),
-    );
+// async function canEditMilestone(milestoneId: number, userId: number) {
+//   const milestone = await db
+//     .select()
+//     .from(projectMilestones)
+//     .where(eq(projectMilestones.id, milestoneId))
+//     .innerJoin(
+//       projectMilestoneAssignees,
+//       and(
+//         eq(projectMilestoneAssignees.projectMilestoneId, milestoneId),
+//         eq(projectMilestoneAssignees.userId, userId),
+//       ),
+//     );
 
-  console.log(milestone);
+//   console.log(milestone);
 
-  if (milestone.length < 1 || !milestone[0])
-    throw new Error("You are not authorized");
+//   if (milestone.length < 1 || !milestone[0])
+//     throw new Error("You are not authorized");
 
-  return milestone[0];
-}
+//   return milestone[0];
+// }
 
 export async function editMilestone(data: IEditMilestone, userId: number) {
   const milestoneData = editMilestoneSchema.parse(data);
 
-  await canEditMilestone(milestoneData.id, userId);
+  const milestone = (
+    await db
+      .select()
+      .from(projectMilestones)
+      .where(eq(projectMilestones.id, milestoneData.id))
+  )[0];
+
+  const projectMember = await getProjectMember(milestone.projectId, userId);
+
+  const ability = defineAbilityFor(projectMember);
+
+  if (ability.cannot("edit", "Milestone")) {
+    throw new Error("You do not have permission to edit this milestone");
+  }
 
   const { id, assigneesId, ...valuesToUpdate } =
     removeEmptyFields(milestoneData);
@@ -231,7 +246,20 @@ export async function editMilestone(data: IEditMilestone, userId: number) {
 export async function deleteMilestone(data: IDeleteMilestone, userId: number) {
   const milestoneData = deleteMilestoneSchema.parse(data);
 
-  await canEditMilestone(milestoneData.id, userId);
+  const milestone = (
+    await db
+      .select()
+      .from(projectMilestones)
+      .where(eq(projectMilestones.id, milestoneData.id))
+  )[0];
+
+  const projectMember = await getProjectMember(milestone.projectId, userId);
+
+  const ability = defineAbilityFor(projectMember);
+
+  if (ability.cannot("delete", "Milestone")) {
+    throw new Error("You do not have permission to delete this milestone");
+  }
 
   await db
     .delete(projectMilestones)
@@ -246,7 +274,22 @@ export async function deleteMilestone(data: IDeleteMilestone, userId: number) {
 export async function createAssignees(data: ICreateAssignees, userId: number) {
   const assigneesData = createAssigneesSchema.parse(data);
 
-  // await canEditMilestone(assigneesData.milestoneId, userId);
+  const milestone = (
+    await db
+      .select()
+      .from(projectMilestones)
+      .where(eq(projectMilestones.id, assigneesData.milestoneId))
+  )[0];
+
+  const projectMember = await getProjectMember(milestone.projectId, userId);
+
+  const ability = defineAbilityFor(projectMember);
+
+  if (ability.cannot("edit", "Milestone")) {
+    throw new Error(
+      "You do not have permission to assign a user to this milestone",
+    );
+  }
 
   assigneesData.assigneesId.length > 0 &&
     (await db.insert(projectMilestoneAssignees).values(
@@ -260,7 +303,22 @@ export async function createAssignees(data: ICreateAssignees, userId: number) {
 export async function deleteAssignees(data: IDeleteAssignee, userId: number) {
   const assigneeData = deleteAssigneeSchema.parse(data);
 
-  // await canEditMilestone(assigneeData.milestoneId, userId);
+  const milestone = (
+    await db
+      .select()
+      .from(projectMilestones)
+      .where(eq(projectMilestones.id, assigneeData.milestoneId))
+  )[0];
+
+  const projectMember = await getProjectMember(milestone.projectId, userId);
+
+  const ability = defineAbilityFor(projectMember);
+
+  if (ability.cannot("edit", "Milestone")) {
+    throw new Error(
+      "You do not have permission to unassign a user to this milestone",
+    );
+  }
 
   await db
     .delete(projectMilestoneAssignees)
