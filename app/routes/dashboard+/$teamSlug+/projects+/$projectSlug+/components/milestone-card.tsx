@@ -1,5 +1,5 @@
-import { CheckIcon, UserCircle } from "lucide-react";
-import { useState } from "react";
+import { CheckIcon, MoreHorizontalIcon, UserCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import {
   Command,
@@ -12,7 +12,32 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  // DropdownMenuLabel,
+  // DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+
 import { cn } from "~/lib/utils";
+import { useFetcher } from "@remix-run/react";
+import { useToast } from "~/components/ui/use-toast";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "~/components/ui/alert-dialog";
+import {
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@radix-ui/react-alert-dialog";
+import { buttonVariants } from "~/components/ui/button";
 
 interface ProjectCardProps {
   milestone: {
@@ -45,6 +70,9 @@ interface ProjectCardProps {
     profilePhoto: string;
   }[];
 
+  projectSlug: string;
+  teamSlug: string;
+
   onAddAssignee?: (milestoneId: number, assigneeId: number) => void;
   onDeleteAssignee?: (milestoneId: number, assigneeId: number) => void;
 }
@@ -57,15 +85,27 @@ export function MilestoneKanbanCard({
   members = [],
   onAddAssignee = Noop,
   onDeleteAssignee = Noop,
+  projectSlug,
+  teamSlug,
 }: ProjectCardProps) {
   const [openAssignees, setOpenAssignees] = useState(false);
 
   return (
     <div className="rounded-lg border border-border bg-card p-4 text-card-foreground">
-      <span className="inline-block text-[10px] text-gray-400">
-        {milestone.slug}
-      </span>
-      <h3 className="font-medium">{milestone.name}</h3>
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="inline-block text-[10px] text-gray-400">
+            {milestone.slug}
+          </span>
+          <h3 className="font-medium">{milestone.name}</h3>
+        </div>
+
+        <CardMenu
+          milestone={milestone}
+          projectSlug={projectSlug}
+          teamSlug={teamSlug}
+        />
+      </div>
       <p className="text-xs text-gray-400">{milestone.description}</p>
 
       <Popover open={openAssignees} onOpenChange={setOpenAssignees}>
@@ -150,14 +190,106 @@ export function MilestoneKanbanCard({
   );
 }
 
-// <div role="button" className="mt-5 inline-flex -space-x-1">
-//         {assignees.map((assignee) => (
-//           <Avatar
-//             key={assignee.id}
-//             className="h-7 w-7 text-xs outline outline-foreground/10"
-//           >
-//             <AvatarImage src={assignee.profilePhoto} alt={assignee.fullName} />
-//             <AvatarFallback>{assignee.initials}</AvatarFallback>
-//           </Avatar>
-//         ))}
-//       </div>
+function CardMenu({
+  milestone,
+  teamSlug,
+  projectSlug,
+}: {
+  milestone: ProjectCardProps["milestone"];
+  teamSlug: string;
+  projectSlug: string;
+}) {
+  // const [openDialog, setOpenDialog] = useState<"DELETE_MILESTONE" | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const fetcher = useFetcher();
+
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (fetcher.data && fetcher.state === "idle") {
+      if (fetcher.data.fieldErrors) {
+        // console.log(fetcher.data.fieldErrors);
+        toast({
+          title: "Something went wrong",
+          description: Object.entries(fetcher.data.fieldErrors)
+            .map(([key, value]) => `${key}:${value}`)
+            .join("\n"),
+        });
+      }
+      if (fetcher.data.formErrors) {
+        // console.log(fetcher.data.formErrors);
+        toast({
+          title: "Something went wrong",
+          description: fetcher.data.formErrors,
+        });
+      }
+    }
+  }, [fetcher.data, fetcher.state, toast]);
+
+  return (
+    <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+      <DropdownMenuTrigger
+        className={buttonVariants({ variant: "ghost", size: "sm" })}
+      >
+        <MoreHorizontalIcon className="h-4 w-4" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent data-stop-propagation>
+        {/* <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Profile</DropdownMenuItem>
+        <DropdownMenuItem>Billing</DropdownMenuItem>
+      <DropdownMenuItem>Subscription</DropdownMenuItem> */}
+        {/* <DropdownMenuSeparator /> */}
+        <AlertDialog
+        // open={openDialog === "DELETE_MILESTONE"}
+        // onOpenChange={(v) => {
+        //   setOpenDialog(v ? "DELETE_MILESTONE" : null);
+        // }}
+        >
+          <AlertDialogTrigger asChild>
+            <DropdownMenuItem
+              onSelect={(e) => {
+                e.preventDefault();
+                // setOpenDialog("DELETE_MILESTONE");
+              }}
+              className="text-destructive focus:bg-destructive"
+            >
+              Delete
+            </DropdownMenuItem>
+          </AlertDialogTrigger>
+          <AlertDialogContent data-stop-propagation>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete your
+                project and remove all data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+              <AlertDialogAction
+                type="submit"
+                disabled={fetcher.state === "submitting"}
+                className={buttonVariants({ variant: "destructive" })}
+                onClick={(e) => {
+                  // e.preventDefault();
+                  fetcher.submit(
+                    {},
+                    {
+                      method: "DELETE",
+                      action: `/dashboard/${teamSlug}/projects/${projectSlug}/milestones/${milestone.id}`,
+                    },
+                  );
+                  setIsDropdownOpen(false);
+                }}
+              >
+                Delete Milestone
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
