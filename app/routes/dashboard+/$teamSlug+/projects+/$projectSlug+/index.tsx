@@ -255,6 +255,8 @@ function Board({
                     ? new Date(milestone.milestone.updatedAt)
                     : null,
                 }}
+                projectSlug={project.project.slug!}
+                teamSlug={teamSlug}
                 assignees={milestone.assignees.filter(Boolean) as any}
                 members={project.members}
                 onAddAssignee={(milestoneId, assigneeId) => {

@@ -16,12 +16,15 @@ import {
   editMilestoneSchema,
 } from "~/features/projects/milestones/shared";
 
-export async function action({ request }: ActionArgs) {
+export async function action({ params, request }: ActionArgs) {
   const userId = await requireUserId(request);
   const formData = await request.formData();
   const formObject = Object.fromEntries(formData) as { [x: string]: any };
 
   const method = request.method;
+
+  const milestone = (await getProjectMilestone(params.milestoneId as string))
+    .milestone;
 
   if (method === "PATCH") {
     const credentials = editMilestoneSchema.safeParse({
@@ -71,7 +74,8 @@ export async function action({ request }: ActionArgs) {
 
   if (method === "DELETE") {
     const credentials = deleteMilestoneSchema.safeParse({
-      ...formObject,
+      // ...formObject,
+      id: milestone.id,
     });
 
     if (!credentials.success) {
