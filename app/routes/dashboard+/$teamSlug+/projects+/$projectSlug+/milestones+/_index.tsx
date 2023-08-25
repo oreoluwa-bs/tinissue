@@ -4,7 +4,7 @@ import { createMilestone } from "~/features/projects/milestones";
 import { createProjectMilestoneSchema } from "~/features/projects/milestones/shared";
 
 export async function action({ request }: ActionArgs) {
-  await requireUserId(request);
+  const userId = await requireUserId(request);
   const formData = await request.formData();
   const formObject = Object.fromEntries(formData) as { [x: string]: any };
 
@@ -29,7 +29,7 @@ export async function action({ request }: ActionArgs) {
       }
 
       try {
-        await createMilestone(credentials.data);
+        await createMilestone(credentials.data, userId);
 
         return json(
           {

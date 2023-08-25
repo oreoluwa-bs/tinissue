@@ -26,8 +26,19 @@ import { removeEmptyFields } from "~/lib/utils";
 import { getProjectMember } from "../index";
 import { defineAbilityFor } from "./permissions";
 
-export async function createMilestone(data: ICreateProjectMilestone) {
+export async function createMilestone(
+  data: ICreateProjectMilestone,
+  userId: number,
+) {
   const projectData = createProjectMilestoneSchema.parse(data);
+
+  const projectMember = await getProjectMember(projectData.projectId, userId);
+
+  const ability = defineAbilityFor(projectMember);
+
+  if (ability.cannot("create", "Milestone")) {
+    throw new Error("You do not have permission to create this milestone");
+  }
 
   await db.transaction(async (tx) => {
     const slug = slugifyAndAddRandomSuffix(projectData.name);
