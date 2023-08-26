@@ -23,8 +23,8 @@ export async function action({ params, request }: ActionArgs) {
 
   const method = request.method;
 
-  const milestone = (await getProjectMilestone(params.milestoneId as string))
-    .milestone;
+  // const milestone = (await getProjectMilestone(params.milestoneId as string))
+  //   .milestone;
 
   if (method === "PATCH") {
     const credentials = editMilestoneSchema.safeParse({
@@ -32,6 +32,7 @@ export async function action({ params, request }: ActionArgs) {
       ...(formData.getAll("assigneesId[]").length > 0 && {
         assigneesId: formData.getAll("assigneesId[]"),
       }),
+      id: params.milestoneId as string,
     });
 
     if (!credentials.success) {
@@ -75,7 +76,7 @@ export async function action({ params, request }: ActionArgs) {
   if (method === "DELETE") {
     const credentials = deleteMilestoneSchema.safeParse({
       // ...formObject,
-      id: milestone.id,
+      id: params.milestoneId as string,
     });
 
     if (!credentials.success) {

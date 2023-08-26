@@ -1,5 +1,6 @@
 import { db } from "~/db/db.server";
 import type {
+  IChangeMilestoneStatus,
   ICreateAssignees,
   ICreateProjectMilestone,
   IDeleteAssignee,
@@ -7,6 +8,7 @@ import type {
   IEditMilestone,
 } from "./shared";
 import {
+  changeMilestoneStatusSchema,
   createAssigneesSchema,
   createProjectMilestoneSchema,
   deleteAssigneeSchema,
@@ -342,4 +344,35 @@ export async function deleteAssignees(data: IDeleteAssignee, userId: number) {
         eq(projectMilestoneAssignees.userId, assigneeData.assigneeId),
       ),
     );
+}
+
+export async function changeMilestoneStatus(
+  data: IChangeMilestoneStatus,
+  userId: number,
+) {
+  const milestoneData = changeMilestoneStatusSchema.parse(data);
+
+  const milestone = (
+    await db
+      .select()
+      .from(projectMilestones)
+      .where(eq(projectMilestones.id, milestoneData.id))
+  )[0];
+
+  const projectMember = await getProjectMember(milestone.projectId, userId);
+
+  const ability = defineAbilityFor(projectMember);
+
+  if (ability.cannot("update", "Milestone", "status")) {
+    throw new Error(
+      "You do not have permission to change the status of this milestone",
+    );
+  }
+
+  const { id, status } = removeEmptyFields(milestoneData);
+
+  await db
+    .update(projectMilestones)
+    .set({ status })
+    .where(eq(projectMilestones.id, id));
 }

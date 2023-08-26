@@ -71,6 +71,21 @@ export const deleteMilestoneSchema = z.object({
 });
 export type IDeleteMilestone = z.infer<typeof deleteMilestoneSchema>;
 
+export const changeMilestoneStatusSchema = z.object({
+  id: z
+    .union([
+      z
+        .string({ required_error: "Milestone is requred" })
+        .min(1, "Milestone is required"),
+      z.number({ required_error: "Milestone is required" }),
+    ])
+    .transform((v) => Number(v)),
+  status: z.enum(statusValues),
+});
+export type IChangeMilestoneStatus = z.infer<
+  typeof changeMilestoneStatusSchema
+>;
+
 /**
  *
  *
