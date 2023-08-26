@@ -3,7 +3,7 @@ import { NavLink, Outlet, useFetcher, useLoaderData } from "@remix-run/react";
 import {
   ChevronsUpDown,
   FolderKanban,
-  LayoutDashboard,
+  // LayoutDashboard,
   PlusCircleIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -85,18 +85,19 @@ export default function DashboardLayout() {
 }
 
 const routes = [
-  {
-    url: (id: string) => `/dashboard/${id}`,
-    id: "dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    isEnd: true,
-  },
+  // {
+  //   url: (id: string) => `/dashboard/${id}`,
+  //   id: "dashboard",
+  //   label: "Dashboard",
+  //   icon: LayoutDashboard,
+  //   isEnd: true,
+  // },
   {
     url: (id: string) => `/dashboard/${id}/projects`,
     id: "projects",
     label: "Projects",
     icon: FolderKanban,
+    isEnd: false,
   },
 ];
 
