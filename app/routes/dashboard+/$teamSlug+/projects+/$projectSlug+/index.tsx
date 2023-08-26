@@ -134,8 +134,8 @@ export default function ProjectRoute() {
       </div>
 
       <section>
-        <div className="flex h-[75vh] flex-1 gap-4 overflow-auto">
-          {statusValues.map((stat) => {
+        <div className="flex h-[75vh] flex-1 gap-4  overflow-auto">
+          {statusValues.map((stat, index, arr) => {
             const milestones = loaderData.milestones.filter(
               (item) => item.milestone.status === stat,
             );
@@ -148,6 +148,8 @@ export default function ProjectRoute() {
                 milestones={milestones}
                 newMilestone={newMilestone}
                 teamSlug={params["teamSlug"] as string}
+                prevStat={arr[index - 1] ?? null}
+                nextStat={arr[index + 1] ?? null}
               />
             );
           })}
@@ -163,12 +165,16 @@ function Board({
   project,
   teamSlug,
   milestones,
+  prevStat,
+  nextStat,
 }: {
   stat: "BACKLOG" | "TODO" | "IN PROGRESS" | "DONE" | "CANCELLED";
   newMilestone: ReturnType<typeof useFetcher<any>>;
   project: ReturnType<typeof useLoaderData<typeof loader>>["project"];
   milestones: ReturnType<typeof useLoaderData<typeof loader>>["milestones"];
   teamSlug: string;
+  nextStat: "BACKLOG" | "TODO" | "IN PROGRESS" | "DONE" | "CANCELLED" | null;
+  prevStat: "BACKLOG" | "TODO" | "IN PROGRESS" | "DONE" | "CANCELLED" | null;
 }) {
   const { toast } = useToast();
   const [showNewMilestoneDialog, setShowNewMilestoneDialog] = useState(false);
@@ -197,10 +203,10 @@ function Board({
   return (
     <div
       key={stat}
-      className="bordr flex-shrink-0 rounded-lg border-border bg-border/25 p-4"
+      className="bordr flex-shrink-0 overflow-auto rounded-lg border-border bg-border/25"
       style={{ width: 350 }}
     >
-      <div className="flex items-baseline justify-between">
+      <div className="sticky top-0 flex items-baseline justify-between bg-primary p-4  text-primary-foreground">
         <h3 className="font-medium capitalize">{stat.toLowerCase()}</h3>
 
         <Dialog
@@ -235,7 +241,7 @@ function Board({
           </DialogContent>
         </Dialog>
       </div>
-      <div className="mt-4 space-y-4">
+      <div className="my-4  space-y-4 px-4">
         {milestones.map((milestone) => {
           return (
             <Link
@@ -284,6 +290,10 @@ function Board({
                       action: `/dashboard/${teamSlug}/projects/${project.project.slug}/milestones/${milestoneId}/assignees`,
                     },
                   );
+                }}
+                meta={{
+                  nextStat,
+                  prevStat,
                 }}
               />
             </Link>

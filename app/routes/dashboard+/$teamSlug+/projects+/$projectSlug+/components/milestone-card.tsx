@@ -16,8 +16,11 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuPortal,
   // DropdownMenuLabel,
-  // DropdownMenuSeparator,
+  DropdownMenuSeparator,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 
@@ -38,6 +41,7 @@ import {
   AlertDialogCancel,
 } from "@radix-ui/react-alert-dialog";
 import { buttonVariants } from "~/components/ui/button";
+import { DropdownMenuSub } from "@radix-ui/react-dropdown-menu";
 
 interface ProjectCardProps {
   milestone: {
@@ -75,6 +79,11 @@ interface ProjectCardProps {
 
   onAddAssignee?: (milestoneId: number, assigneeId: number) => void;
   onDeleteAssignee?: (milestoneId: number, assigneeId: number) => void;
+
+  meta?: {
+    nextStat: ProjectCardProps["milestone"]["status"] | null;
+    prevStat: ProjectCardProps["milestone"]["status"] | null;
+  };
 }
 
 function Noop(...v: any) {}
@@ -87,6 +96,7 @@ export function MilestoneKanbanCard({
   onDeleteAssignee = Noop,
   projectSlug,
   teamSlug,
+  meta,
 }: ProjectCardProps) {
   const [openAssignees, setOpenAssignees] = useState(false);
 
@@ -104,6 +114,7 @@ export function MilestoneKanbanCard({
           milestone={milestone}
           projectSlug={projectSlug}
           teamSlug={teamSlug}
+          meta={meta}
         />
       </div>
       <p className="text-xs text-gray-400">{milestone.description}</p>
@@ -194,10 +205,12 @@ function CardMenu({
   milestone,
   teamSlug,
   projectSlug,
+  meta,
 }: {
   milestone: ProjectCardProps["milestone"];
   teamSlug: string;
   projectSlug: string;
+  meta: ProjectCardProps["meta"];
 }) {
   // const [openDialog, setOpenDialog] = useState<"DELETE_MILESTONE" | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -239,7 +252,44 @@ function CardMenu({
         <DropdownMenuItem>Profile</DropdownMenuItem>
         <DropdownMenuItem>Billing</DropdownMenuItem>
       <DropdownMenuItem>Subscription</DropdownMenuItem> */}
-        {/* <DropdownMenuSeparator /> */}
+        <DropdownMenuSub data-stop-propagation>
+          <DropdownMenuSubTrigger>Move</DropdownMenuSubTrigger>
+          <DropdownMenuPortal data-stop-propagation>
+            <DropdownMenuSubContent data-stop-propagation>
+              {meta?.prevStat && (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    fetcher.submit(
+                      { status: meta.prevStat },
+                      {
+                        method: "PATCH",
+                        action: `/dashboard/${teamSlug}/projects/${projectSlug}/milestones/${milestone.id}/status`,
+                      },
+                    );
+                  }}
+                >
+                  Move Left
+                </DropdownMenuItem>
+              )}
+              {meta?.nextStat && (
+                <DropdownMenuItem
+                  onSelect={() => {
+                    fetcher.submit(
+                      { status: meta.nextStat },
+                      {
+                        method: "PATCH",
+                        action: `/dashboard/${teamSlug}/projects/${projectSlug}/milestones/${milestone.id}/status`,
+                      },
+                    );
+                  }}
+                >
+                  Move Right
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuSubContent>
+          </DropdownMenuPortal>
+        </DropdownMenuSub>
+        <DropdownMenuSeparator />
         <AlertDialog
         // open={openDialog === "DELETE_MILESTONE"}
         // onOpenChange={(v) => {
