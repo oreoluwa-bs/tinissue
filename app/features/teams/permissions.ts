@@ -1,6 +1,8 @@
 import { defineAbility } from "@casl/ability";
 
-export const defineAbilityFor = (user: { role: "MEMBER" | "OWNER" | null }) => {
+export const defineAbilityFor = (user: {
+  role: "MEMBER" | "ADMIN" | "OWNER" | null;
+}) => {
   /**
    * User can read
    *
@@ -12,11 +14,12 @@ export const defineAbilityFor = (user: { role: "MEMBER" | "OWNER" | null }) => {
   return defineAbility((can, cannot) => {
     can("read", "Team");
 
-    if (user.role === "OWNER") {
+    if (user.role === "OWNER" || user.role === "ADMIN") {
       can("manage", "Team");
+      can("create", "Project");
     }
-    // if (user.role === "ADMIN") {
-    //   cannot("delete", "Team");
-    // }
+    if (user.role === "ADMIN") {
+      cannot("delete", "Team");
+    }
   });
 };
