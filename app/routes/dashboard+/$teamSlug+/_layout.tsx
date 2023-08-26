@@ -1,11 +1,5 @@
 import { json, redirect, type LoaderArgs } from "@remix-run/node";
-import {
-  Form,
-  NavLink,
-  Outlet,
-  useFetcher,
-  useLoaderData,
-} from "@remix-run/react";
+import { NavLink, Outlet, useFetcher, useLoaderData } from "@remix-run/react";
 import {
   ChevronsUpDown,
   FolderKanban,
@@ -38,10 +32,18 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { CreateTeamForm } from "../team";
 import { getTeam, getUserTeams } from "~/features/teams";
 import { getUserProfile } from "~/features/user";
-import { cn, generateAvatarGradient } from "~/lib/utils";
+import { cn } from "~/lib/utils";
 
 export async function loader({ params, request }: LoaderArgs) {
   const userId = await requireUserId(request);
@@ -105,7 +107,8 @@ interface NavbarProps {
 }
 
 function Navbar({ user, teams, currentTeam }: NavbarProps) {
-  const avatarColor = generateAvatarGradient(user.firstName!, user.lastName!);
+  const fetcher = useFetcher();
+  // const avatarColor = generateAvatarGradient(user.firstName!, user.lastName!);
   return (
     <header className="border-border-300 sticky top-0 border-b bg-background px-6 py-2">
       <div className="flex  items-center justify-between">
@@ -116,20 +119,39 @@ function Navbar({ user, teams, currentTeam }: NavbarProps) {
         </div>
 
         <div className="inline-flex items-center gap-2">
-          <Avatar>
-            <AvatarImage src={user.profilePhoto} alt={user.fullName} />
-            <AvatarFallback
-              style={{
-                background: avatarColor.gradient,
-                color: avatarColor.isLight ? "black" : "white",
-              }}
-            >
-              {user.initials}
-            </AvatarFallback>
-          </Avatar>
-          <Form method="POST" action="/logout">
-            <Button size="sm">Logout</Button>
-          </Form>
+          <DropdownMenu>
+            <DropdownMenuTrigger>
+              <Avatar className="h-10 w-10 text-sm">
+                <AvatarImage src={user.profilePhoto} alt={user.fullName} />
+                <AvatarFallback
+                // style={{
+                //   background: avatarColor.gradient,
+                //   color: avatarColor.isLight ? "black" : "white",
+                // }}
+                >
+                  {user.initials}
+                </AvatarFallback>
+              </Avatar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[200px]">
+              <DropdownMenuLabel>
+                {user.fullName}
+                <span className="block text-xs text-muted-foreground">
+                  {user.email}
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  fetcher.submit({}, { method: "POST", action: "/logout" });
+                }}
+              >
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
       <div className="-mx-3 flex items-center justify-between py-1">
