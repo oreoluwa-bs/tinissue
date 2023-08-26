@@ -1,4 +1,4 @@
-import type { InferModel} from "drizzle-orm";
+import type { InferModel } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import {
   mysqlTable,
@@ -49,7 +49,7 @@ export const teamMembers = mysqlTable(
     teamId: int("team_id")
       .notNull()
       .references(() => teams.id, { onUpdate: "cascade", onDelete: "cascade" }),
-    role: text("role", { enum: ["OWNER", "MEMBER"] }),
+    role: text("role", { enum: ["OWNER", "ADMIN", "MEMBER"] }),
   },
   (t) => ({
     pk: primaryKey(t.userId, t.teamId),
