@@ -1,4 +1,4 @@
-import { cn, generateAvatarGradient, removeEmptyFields } from "./utils";
+import { cn, generateAvatarGradient, removeEmptyFields, sleep } from "./utils";
 
 describe("Gradient Avatar", () => {
   it("Should return same value on diffent calls", () => {
@@ -28,5 +28,16 @@ describe("Remove empty fields", () => {
     expect(newObj.name).toBeTruthy();
     expect(newObj.color).toBeUndefined();
     expect(newObj.age).toBeUndefined();
+  });
+});
+
+describe("Sleep", () => {
+  it("Should await for 1s", async () => {
+    const start = new Date().getTime();
+    await sleep(1000);
+    const end = new Date().getTime();
+
+    expect(end - start).toBeGreaterThanOrEqual(1000);
+    expect(end - start).toBeLessThanOrEqual(1500); // just for offsets
   });
 });
