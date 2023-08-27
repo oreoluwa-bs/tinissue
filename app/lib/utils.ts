@@ -30,3 +30,11 @@ export const removeEmptyFields = <T extends { [key: string]: any }>(
 
   return newObject;
 };
+
+export function sleep(delay = 5000) {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(null);
+    }, delay);
+  });
+}
