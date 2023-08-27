@@ -16,5 +16,6 @@ function customRender(ui: React.ReactElement, options = {}) {
 
 export * from "@testing-library/react";
 export { default as userEvent } from "@testing-library/user-event";
+export { unstable_createRemixStub as createRemixStub } from "@remix-run/testing";
 // override render export
 export { customRender as render };

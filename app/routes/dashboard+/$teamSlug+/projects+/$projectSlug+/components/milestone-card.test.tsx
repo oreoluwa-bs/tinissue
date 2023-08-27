@@ -1,54 +1,74 @@
-import { act, render, screen, userEvent, waitFor } from "test/utils";
+import {
+  act,
+  createRemixStub,
+  render,
+  screen,
+  userEvent,
+  waitFor,
+} from "test/utils";
 import { MilestoneKanbanCard } from "./milestone-card";
 
 const onDeleteAssignee = vi.fn();
 const onAddAssignee = vi.fn();
 
-describe("Milestone Card", () => {
-  const milestone = {
+const milestone = {
+  id: 1,
+  slug: "slug",
+  name: "Go to School",
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  description: null,
+  status: "BACKLOG" as const,
+  projectId: 1,
+};
+
+const members = [
+  {
     id: 1,
-    slug: "slug",
-    name: "Go to School",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    description: null,
-    status: "BACKLOG" as const,
-    projectId: 1,
-  };
+    firstName: "James",
+    lastName: "Doe",
+    email: "jd@test.com",
+    fullName: "James Doe",
+    initials: "JD",
+    profilePhoto: "/image.png",
+  },
+  {
+    id: 2,
+    firstName: "Mane",
+    lastName: "Doe",
+    email: "md@test.com",
+    fullName: "Manes Doe",
+    initials: "MD",
+    profilePhoto: "/image.png",
+  },
+];
 
-  const members = [
-    {
-      id: 1,
-      firstName: "James",
-      lastName: "Doe",
-      email: "jd@test.com",
-      fullName: "James Doe",
-      initials: "JD",
-      profilePhoto: "/image.png",
+const assignees = [members[0]];
+
+const RemixStub = createRemixStub([
+  {
+    id: "rootRoute",
+    path: "/",
+    action: async ({ request }) => {
+      return null;
     },
-    {
-      id: 2,
-      firstName: "Mane",
-      lastName: "Doe",
-      email: "md@test.com",
-      fullName: "Manes Doe",
-      initials: "MD",
-      profilePhoto: "/image.png",
-    },
-  ];
-
-  const assignees = [members[0]];
-
-  beforeEach(() => {
-    render(
+    element: (
       <MilestoneKanbanCard
         milestone={milestone}
         assignees={assignees}
         members={members}
         onAddAssignee={onAddAssignee}
         onDeleteAssignee={onDeleteAssignee}
-      />,
-    );
+        projectSlug="1"
+        teamSlug="1"
+      />
+    ),
+  },
+]);
+
+describe("Milestone Card", () => {
+  beforeEach(() => {
+    render(<RemixStub />);
   });
 
   it("should render the milestone title/name", () => {

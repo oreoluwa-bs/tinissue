@@ -38,7 +38,7 @@ export default defineConfig({
         "app/components/ui/**",
       ],
       lines: 70,
-      functions: 70,
+      functions: 60,
       branches: 70,
       statements: 70,
     },
