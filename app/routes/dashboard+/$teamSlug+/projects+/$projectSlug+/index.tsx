@@ -221,7 +221,7 @@ export default function ProjectRoute() {
               );
             })}
           </div>
-          <DragOverlay dropAnimation={null}>
+          <DragOverlay dropAnimation={{ duration: 300 }}>
             {isDragging && activeMilestone ? (
               <MilestoneKanbanCard
                 milestone={{
