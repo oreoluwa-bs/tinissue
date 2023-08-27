@@ -1,4 +1,8 @@
-import type { LinksFunction, V2_MetaFunction } from "@remix-run/node";
+import type {
+  LinksFunction,
+  LoaderArgs,
+  V2_MetaFunction,
+} from "@remix-run/node";
 import {
   Links,
   LiveReload,
@@ -6,9 +10,12 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react";
 import styles from "./globals.css";
 import { Toaster } from "./components/ui/toaster";
+import { prefs } from "./features/preferences";
+import { useLayoutEffect, useState } from "react";
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -23,9 +30,26 @@ export const meta: V2_MetaFunction = () => {
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 
+export async function loader({ request }: LoaderArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const cookie = await prefs.parse(cookieHeader);
+  return { theme: cookie?.theme ?? "system" };
+}
+
 export default function App() {
+  const [systemTheme, setSystemTheme] = useState<string>("dark");
+  const { theme } = useLoaderData<typeof loader>();
+
+  useLayoutEffect(() => {
+    setSystemTheme(
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light",
+    );
+  }, []);
+
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={theme === "system" ? systemTheme : theme}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />

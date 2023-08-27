@@ -40,12 +40,25 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { CreateTeamForm } from "../team";
 import { getTeam, getUserTeams } from "~/features/teams";
 import { getUserProfile } from "~/features/user";
 import { cn } from "~/lib/utils";
+import { Label } from "~/components/ui/label";
+import { prefs } from "~/features/preferences";
 
 export async function loader({ params, request }: LoaderArgs) {
+  const cookieHeader = request.headers.get("Cookie");
+  const cookie = await prefs.parse(cookieHeader);
+
   const userId = await requireUserId(request);
 
   const user = await getUserProfile(userId);
@@ -63,6 +76,9 @@ export async function loader({ params, request }: LoaderArgs) {
     user,
     teams: userTeams,
     currentTeam,
+    prefs: {
+      theme: cookie?.theme ?? "system",
+    },
   });
 }
 
@@ -75,6 +91,7 @@ export default function DashboardLayout() {
         user={loaderData.user}
         teams={loaderData.teams}
         currentTeam={loaderData.currentTeam}
+        prefs={loaderData.prefs}
       />
       <div className="flex-1 bg-background/50 px-6">
         <Outlet />
@@ -105,9 +122,10 @@ interface NavbarProps {
   user: ReturnType<typeof useLoaderData<typeof loader>>["user"];
   teams: ReturnType<typeof useLoaderData<typeof loader>>["teams"];
   currentTeam: ReturnType<typeof useLoaderData<typeof loader>>["currentTeam"];
+  prefs: ReturnType<typeof useLoaderData<typeof loader>>["prefs"];
 }
 
-function Navbar({ user, teams, currentTeam }: NavbarProps) {
+function Navbar({ user, teams, currentTeam, prefs }: NavbarProps) {
   const fetcher = useFetcher();
   // const avatarColor = generateAvatarGradient(user.firstName!, user.lastName!);
   return (
@@ -143,6 +161,40 @@ function Navbar({ user, teams, currentTeam }: NavbarProps) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="focus:bg-transparent"
+                onSelect={(e) => {
+                  e.preventDefault();
+                }}
+              >
+                <div className="flex w-full items-baseline justify-between">
+                  <Label htmlFor="theme-select" className="font-normal">
+                    Theme
+                  </Label>
+                  <Select
+                    name="theme"
+                    defaultValue={prefs.theme}
+                    onValueChange={(v) => {
+                      fetcher.submit(
+                        { theme: v },
+                        { method: "POST", action: "/preferences" },
+                      );
+                    }}
+                  >
+                    <SelectTrigger id="theme-select" className="w-fit">
+                      <SelectValue placeholder="Select theme" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectItem value="dark">Dark</SelectItem>
+                        <SelectItem value="light">Light</SelectItem>
+                        <SelectItem value="system">System</SelectItem>
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onSelect={(e) => {
