@@ -5,6 +5,7 @@ import {
   FolderKanban,
   // LayoutDashboard,
   PlusCircleIcon,
+  SettingsIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { requireUserId } from "~/features/auth";
@@ -114,6 +115,13 @@ const routes = [
     id: "projects",
     label: "Projects",
     icon: FolderKanban,
+    isEnd: false,
+  },
+  {
+    url: (id: string) => `/dashboard/${id}/settings`,
+    id: "settings",
+    label: "Settings",
+    icon: SettingsIcon,
     isEnd: false,
   },
 ];
