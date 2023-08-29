@@ -8,6 +8,11 @@ import {
   createAssigneesSchema,
   deleteAssigneeSchema,
 } from "~/features/projects/milestones/shared";
+import {
+  APIError,
+  InternalServerError,
+  MethodNotSupported,
+} from "~/lib/errors";
 
 export async function action({ request }: ActionArgs) {
   const userId = await requireUserId(request);
@@ -16,26 +21,26 @@ export async function action({ request }: ActionArgs) {
 
   const method = request.method;
 
-  if (method === "POST") {
-    const credentials = createAssigneesSchema.safeParse({
-      ...formObject,
-      ...(formData.getAll("assigneesId[]").length > 0 && {
-        assigneesId: formData.getAll("assigneesId[]"),
-      }),
-    });
+  try {
+    if (method === "POST") {
+      const credentials = createAssigneesSchema.safeParse({
+        ...formObject,
+        ...(formData.getAll("assigneesId[]").length > 0 && {
+          assigneesId: formData.getAll("assigneesId[]"),
+        }),
+      });
 
-    if (!credentials.success) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: credentials.error.flatten().fieldErrors,
-          formErrors: credentials.error.flatten().formErrors.join(", "),
-        },
-        { status: 400 },
-      );
-    }
+      if (!credentials.success) {
+        return json(
+          {
+            fields: formObject,
+            fieldErrors: credentials.error.flatten().fieldErrors,
+            formErrors: credentials.error.flatten().formErrors.join(", "),
+          },
+          { status: 400 },
+        );
+      }
 
-    try {
       await createAssignees(credentials.data, userId);
 
       return json(
@@ -46,39 +51,24 @@ export async function action({ request }: ActionArgs) {
         },
         { status: 201 },
       );
-    } catch (error) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-
-          formErrors:
-            error instanceof Error
-              ? error.message
-              : "Something unexpected happened",
-        },
-        { status: 400 },
-      );
-    }
-  }
-
-  if (method === "DELETE") {
-    const credentials = deleteAssigneeSchema.safeParse({
-      ...formObject,
-    });
-
-    if (!credentials.success) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: credentials.error.flatten().fieldErrors,
-          formErrors: credentials.error.flatten().formErrors.join(", "),
-        },
-        { status: 400 },
-      );
     }
 
-    try {
+    if (method === "DELETE") {
+      const credentials = deleteAssigneeSchema.safeParse({
+        ...formObject,
+      });
+
+      if (!credentials.success) {
+        return json(
+          {
+            fields: formObject,
+            fieldErrors: credentials.error.flatten().fieldErrors,
+            formErrors: credentials.error.flatten().formErrors.join(", "),
+          },
+          { status: 400 },
+        );
+      }
+
       await deleteAssignees(credentials.data, userId);
 
       return json(
@@ -89,30 +79,21 @@ export async function action({ request }: ActionArgs) {
         },
         { status: 201 },
       );
-    } catch (error) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-
-          formErrors:
-            error instanceof Error
-              ? error.message
-              : "Something unexpected happened",
-        },
-        { status: 400 },
-      );
     }
-  }
 
-  return json(
-    {
-      fields: formObject,
-      fieldErrors: null,
-      formErrors: "Method not found",
-    },
-    { status: 400 },
-  );
+    throw new MethodNotSupported();
+  } catch (err) {
+    let error = err instanceof APIError ? err : new InternalServerError();
+
+    return json(
+      {
+        fields: formObject,
+        fieldErrors: null,
+        formErrors: error.message,
+      },
+      { status: error.statusCode },
+    );
+  }
 }
 
 // export async function loader({ params, request }: LoaderArgs) {

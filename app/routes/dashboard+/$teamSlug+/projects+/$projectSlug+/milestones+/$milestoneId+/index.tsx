@@ -1,4 +1,9 @@
-import { json, type ActionArgs, type LoaderArgs } from "@remix-run/node";
+import {
+  json,
+  type ActionArgs,
+  type LoaderArgs,
+  redirect,
+} from "@remix-run/node";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { useEffect } from "react";
 import { Input } from "~/components/ui/input";
@@ -15,6 +20,11 @@ import {
   deleteMilestoneSchema,
   editMilestoneSchema,
 } from "~/features/projects/milestones/shared";
+import {
+  APIError,
+  InternalServerError,
+  MethodNotSupported,
+} from "~/lib/errors";
 
 export async function action({ params, request }: ActionArgs) {
   const userId = await requireUserId(request);
@@ -23,30 +33,30 @@ export async function action({ params, request }: ActionArgs) {
 
   const method = request.method;
 
-  // const milestone = (await getProjectMilestone(params.milestoneId as string))
-  //   .milestone;
+  try {
+    // const milestone = (await getProjectMilestone(params.milestoneId as string))
+    //   .milestone;
 
-  if (method === "PATCH") {
-    const credentials = editMilestoneSchema.safeParse({
-      ...formObject,
-      ...(formData.getAll("assigneesId[]").length > 0 && {
-        assigneesId: formData.getAll("assigneesId[]"),
-      }),
-      id: params.milestoneId as string,
-    });
+    if (method === "PATCH") {
+      const credentials = editMilestoneSchema.safeParse({
+        ...formObject,
+        ...(formData.getAll("assigneesId[]").length > 0 && {
+          assigneesId: formData.getAll("assigneesId[]"),
+        }),
+        id: params.milestoneId as string,
+      });
 
-    if (!credentials.success) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: credentials.error.flatten().fieldErrors,
-          formErrors: credentials.error.flatten().formErrors.join(", "),
-        },
-        { status: 400 },
-      );
-    }
+      if (!credentials.success) {
+        return json(
+          {
+            fields: formObject,
+            fieldErrors: credentials.error.flatten().fieldErrors,
+            formErrors: credentials.error.flatten().formErrors.join(", "),
+          },
+          { status: 400 },
+        );
+      }
 
-    try {
       await editMilestone(credentials.data, userId);
 
       return json(
@@ -57,40 +67,25 @@ export async function action({ params, request }: ActionArgs) {
         },
         { status: 201 },
       );
-    } catch (error) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-
-          formErrors:
-            error instanceof Error
-              ? error.message
-              : "Something unexpected happened",
-        },
-        { status: 400 },
-      );
-    }
-  }
-
-  if (method === "DELETE") {
-    const credentials = deleteMilestoneSchema.safeParse({
-      // ...formObject,
-      id: params.milestoneId as string,
-    });
-
-    if (!credentials.success) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: credentials.error.flatten().fieldErrors,
-          formErrors: credentials.error.flatten().formErrors.join(", "),
-        },
-        { status: 400 },
-      );
     }
 
-    try {
+    if (method === "DELETE") {
+      const credentials = deleteMilestoneSchema.safeParse({
+        // ...formObject,
+        id: params.milestoneId as string,
+      });
+
+      if (!credentials.success) {
+        return json(
+          {
+            fields: formObject,
+            fieldErrors: credentials.error.flatten().fieldErrors,
+            formErrors: credentials.error.flatten().formErrors.join(", "),
+          },
+          { status: 400 },
+        );
+      }
+
       await deleteMilestone(credentials.data, userId);
 
       return json(
@@ -101,30 +96,20 @@ export async function action({ params, request }: ActionArgs) {
         },
         { status: 201 },
       );
-    } catch (error) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-
-          formErrors:
-            error instanceof Error
-              ? error.message
-              : "Something unexpected happened",
-        },
-        { status: 400 },
-      );
     }
-  }
+    throw new MethodNotSupported();
+  } catch (err) {
+    let error = err instanceof APIError ? err : new InternalServerError();
 
-  return json(
-    {
-      fields: formObject,
-      fieldErrors: null,
-      formErrors: "Method not found",
-    },
-    { status: 400 },
-  );
+    return json(
+      {
+        fields: formObject,
+        fieldErrors: null,
+        formErrors: error.message,
+      },
+      { status: error.statusCode },
+    );
+  }
 }
 
 export async function loader({ params, request }: LoaderArgs) {
@@ -133,6 +118,10 @@ export async function loader({ params, request }: LoaderArgs) {
 
   const project = await getProject(params.projectSlug as string);
   const milestone = await getProjectMilestone(params.milestoneId as string);
+
+  if (!milestone || !project.project) {
+    return redirect("/404");
+  }
 
   return json({
     project,

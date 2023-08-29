@@ -27,6 +27,7 @@ import { userSelect } from "~/features/user/utils";
 import { removeEmptyFields } from "~/lib/utils";
 import { getProjectMember } from "../index";
 import { defineAbilityFor } from "./permissions";
+import { Unauthorised } from "~/lib/errors";
 
 export async function createMilestone(
   data: ICreateProjectMilestone,
@@ -39,7 +40,9 @@ export async function createMilestone(
   const ability = defineAbilityFor(projectMember);
 
   if (ability.cannot("create", "Milestone")) {
-    throw new Error("You do not have permission to create this milestone");
+    throw new Unauthorised(
+      "You do not have permission to create this milestone",
+    );
   }
 
   await db.transaction(async (tx) => {
@@ -221,7 +224,7 @@ export async function getProjectMilestone(milestoneIdOrSlug: number | string) {
 //   console.log(milestone);
 
 //   if (milestone.length < 1 || !milestone[0])
-//     throw new Error("You are not authorized");
+//     throw new Unauthorised("You are not authorized");
 
 //   return milestone[0];
 // }
@@ -241,7 +244,7 @@ export async function editMilestone(data: IEditMilestone, userId: number) {
   const ability = defineAbilityFor(projectMember);
 
   if (ability.cannot("edit", "Milestone")) {
-    throw new Error("You do not have permission to edit this milestone");
+    throw new Unauthorised("You do not have permission to edit this milestone");
   }
 
   const { id, assigneesId, ...valuesToUpdate } =
@@ -271,7 +274,9 @@ export async function deleteMilestone(data: IDeleteMilestone, userId: number) {
   const ability = defineAbilityFor(projectMember);
 
   if (ability.cannot("delete", "Milestone")) {
-    throw new Error("You do not have permission to delete this milestone");
+    throw new Unauthorised(
+      "You do not have permission to delete this milestone",
+    );
   }
 
   await db
@@ -299,7 +304,7 @@ export async function createAssignees(data: ICreateAssignees, userId: number) {
   const ability = defineAbilityFor(projectMember);
 
   if (ability.cannot("edit", "Milestone")) {
-    throw new Error(
+    throw new Unauthorised(
       "You do not have permission to assign a user to this milestone",
     );
   }
@@ -328,7 +333,7 @@ export async function deleteAssignees(data: IDeleteAssignee, userId: number) {
   const ability = defineAbilityFor(projectMember);
 
   if (ability.cannot("edit", "Milestone")) {
-    throw new Error(
+    throw new Unauthorised(
       "You do not have permission to unassign a user to this milestone",
     );
   }
@@ -364,7 +369,7 @@ export async function changeMilestoneStatus(
   const ability = defineAbilityFor(projectMember);
 
   if (ability.cannot("update", "Milestone", "status")) {
-    throw new Error(
+    throw new Unauthorised(
       "You do not have permission to change the status of this milestone",
     );
   }

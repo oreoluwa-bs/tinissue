@@ -73,6 +73,10 @@ export async function loader({ params, request }: LoaderArgs) {
   const slug = params["teamSlug"] as string;
   const currentTeam = await getTeam(slug);
 
+  if (!currentTeam) {
+    return redirect("/404");
+  }
+
   return json({
     user,
     teams: userTeams,

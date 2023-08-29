@@ -13,6 +13,7 @@ import { userSelect } from "../user/utils";
 import { removeEmptyFields } from "~/lib/utils";
 import { defineAbilityFor } from "./permissions";
 import { defineAbilityFor as defineTeamAbilityFor } from "../teams/permissions";
+import { Unauthorised } from "~/lib/errors";
 
 export async function createProject(data: ICreateProject, creatorId: number) {
   const projectData = createProjectSchema.parse(data);
@@ -109,7 +110,7 @@ export async function getProject(idOrSlug: string | number) {
     .innerJoin(users, eq(users.id, projectMembers.userId));
 
   const project = {
-    project: projectList[0].projects,
+    project: projectList[0]?.projects,
     members: projectList.map((i) => ({
       // projectMember: i.project_members,
       ...i.users,
@@ -131,7 +132,7 @@ export async function editProject(data: IEditProject, userId: number) {
   const ability = defineAbilityFor(projectMember);
 
   if (ability.cannot("edit", "Project")) {
-    throw new Error("You do not have permission to edit this project");
+    throw new Unauthorised("You do not have permission to edit this project");
   }
 
   await db
@@ -146,7 +147,7 @@ export async function deleteProject(id: number, userId: number) {
   const ability = defineAbilityFor(projectMember);
 
   if (ability.cannot("delete", "Project")) {
-    throw new Error("You do not have permission to delete this project");
+    throw new Unauthorised("You do not have permission to delete this project");
   }
 
   await db.delete(projects).where(eq(projects.id, id));

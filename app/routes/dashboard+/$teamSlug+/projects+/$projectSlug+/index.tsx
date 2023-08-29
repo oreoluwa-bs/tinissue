@@ -36,6 +36,11 @@ import {
   useSensor,
 } from "@dnd-kit/core";
 import { cn } from "~/lib/utils";
+import {
+  APIError,
+  InternalServerError,
+  MethodNotSupported,
+} from "~/lib/errors";
 
 export async function action({ params, request }: ActionArgs) {
   const userId = await requireUserId(request);
@@ -43,25 +48,26 @@ export async function action({ params, request }: ActionArgs) {
   const formObject = Object.fromEntries(formData) as { [x: string]: any };
 
   const method = request.method;
-  const project = (await getProject(params.projectSlug as string)).project;
-  if (method === "PATCH") {
-    const credentials = editProjectSchema.safeParse({
-      ...formObject,
-      id: project.id,
-    });
 
-    if (!credentials.success) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: credentials.error.flatten().fieldErrors,
-          formErrors: credentials.error.flatten().formErrors.join(", "),
-        },
-        { status: 400 },
-      );
-    }
+  try {
+    const project = (await getProject(params.projectSlug as string)).project;
+    if (method === "PATCH") {
+      const credentials = editProjectSchema.safeParse({
+        ...formObject,
+        id: project.id,
+      });
 
-    try {
+      if (!credentials.success) {
+        return json(
+          {
+            fields: formObject,
+            fieldErrors: credentials.error.flatten().fieldErrors,
+            formErrors: credentials.error.flatten().formErrors.join(", "),
+          },
+          { status: 400 },
+        );
+      }
+
       await editProject(credentials.data, userId);
 
       return json(
@@ -72,43 +78,27 @@ export async function action({ params, request }: ActionArgs) {
         },
         { status: 200 },
       );
-    } catch (error) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-          formErrors: error instanceof Error ? error.message : error,
-        },
-        { status: 400 },
-      );
     }
-  }
 
-  if (method === "DELETE") {
-    try {
+    if (method === "DELETE") {
       await deleteProject(project.id, userId);
 
       return redirect(`/dashboard/${params.teamSlug}/projects`);
-    } catch (error) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-          formErrors: error instanceof Error ? error.message : error,
-        },
-        { status: 400 },
-      );
     }
-  }
 
-  return json(
-    {
-      fields: formObject,
-      fieldErrors: null,
-      formErrors: "Method not found",
-    },
-    { status: 400 },
-  );
+    throw new MethodNotSupported();
+  } catch (err) {
+    let error = err instanceof APIError ? err : new InternalServerError();
+
+    return json(
+      {
+        fields: formObject,
+        fieldErrors: null,
+        formErrors: error.message,
+      },
+      { status: error.statusCode },
+    );
+  }
 }
 
 export async function loader({ params, request }: LoaderArgs) {
@@ -116,6 +106,11 @@ export async function loader({ params, request }: LoaderArgs) {
   // const url = new URL(request.url);
 
   const project = await getProject(params.projectSlug as string);
+
+  if (!project.project) {
+    return redirect("/404");
+  }
+
   const milestones = await getProjectMilestones(params.projectSlug as string);
 
   return json({

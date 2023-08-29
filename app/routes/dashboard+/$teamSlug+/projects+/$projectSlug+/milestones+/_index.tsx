@@ -2,14 +2,20 @@ import { json, type ActionArgs } from "@remix-run/node";
 import { requireUserId } from "~/features/auth";
 import { createMilestone } from "~/features/projects/milestones";
 import { createProjectMilestoneSchema } from "~/features/projects/milestones/shared";
+import {
+  APIError,
+  InternalServerError,
+  MethodNotSupported,
+} from "~/lib/errors";
 
 export async function action({ request }: ActionArgs) {
   const userId = await requireUserId(request);
   const formData = await request.formData();
   const formObject = Object.fromEntries(formData) as { [x: string]: any };
 
-  switch (request.method) {
-    case "POST":
+  const method = request.method;
+  try {
+    if (method === "POST") {
       const credentials = createProjectMilestoneSchema.safeParse({
         ...formObject,
         ...(formData.getAll("assigneesId[]").length > 0 && {
@@ -28,41 +34,30 @@ export async function action({ request }: ActionArgs) {
         );
       }
 
-      try {
-        await createMilestone(credentials.data, userId);
+      await createMilestone(credentials.data, userId);
 
-        return json(
-          {
-            fields: formObject,
-            fieldErrors: null,
-            formErrors: null,
-          },
-          { status: 201 },
-        );
-      } catch (error) {
-        return json(
-          {
-            fields: formObject,
-            fieldErrors: null,
-
-            formErrors:
-              error instanceof Error
-                ? error.message
-                : "Something unexpected happened",
-          },
-          { status: 400 },
-        );
-      }
-
-    default:
       return json(
         {
           fields: formObject,
           fieldErrors: null,
-          formErrors: "Method not found",
+          formErrors: null,
         },
-        { status: 400 },
+        { status: 201 },
       );
+    }
+
+    throw new MethodNotSupported();
+  } catch (err) {
+    let error = err instanceof APIError ? err : new InternalServerError();
+
+    return json(
+      {
+        fields: formObject,
+        fieldErrors: null,
+        formErrors: error.message,
+      },
+      { status: error.statusCode },
+    );
   }
 }
 
