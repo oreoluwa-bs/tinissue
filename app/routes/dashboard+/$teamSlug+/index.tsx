@@ -7,7 +7,12 @@ import {
 import { requireUserId } from "~/features/auth";
 import { deleteTeam, editTeam, getTeam } from "~/features/teams";
 import { editTeamSchema } from "~/features/teams/shared";
-import { APIError, InternalServerError, NotFound } from "~/lib/errors";
+import {
+  APIError,
+  InternalServerError,
+  MethodNotSupported,
+  NotFound,
+} from "~/lib/errors";
 
 export async function action({ params, request }: ActionArgs) {
   const userId = await requireUserId(request);
@@ -64,6 +69,8 @@ export async function action({ params, request }: ActionArgs) {
         { status: 200 },
       );
     }
+
+    throw new MethodNotSupported();
   } catch (err) {
     let error = err instanceof APIError ? err : new InternalServerError();
 
