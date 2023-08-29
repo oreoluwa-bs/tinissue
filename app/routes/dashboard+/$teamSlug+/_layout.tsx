@@ -115,17 +115,20 @@ const routes = [
   //   isEnd: true,
   // },
   {
-    url: (id: string) => `/dashboard/${id}/projects`,
+    url: (teamSlug: string) => `/dashboard/${teamSlug}/projects`,
     id: "projects",
     label: "Projects",
     icon: FolderKanban,
     isEnd: false,
   },
   {
-    url: (id: string) => `/dashboard/${id}/settings`,
+    url: (teamSlug: string) => `/dashboard/${teamSlug}/settings`,
     id: "settings",
     label: "Settings",
     icon: SettingsIcon,
+    hidden: ({ teamType }: { teamType: "PERSONAL" | "TEAM" }) => {
+      return teamType === "PERSONAL";
+    },
     isEnd: false,
   },
 ];
@@ -226,6 +229,8 @@ function Navbar({ user, teams, currentTeam, prefs }: NavbarProps) {
               typeof route.url === "function"
                 ? route.url(currentTeam.slug!)
                 : route.url;
+
+            if (route?.hidden?.({ teamType: currentTeam.type })) return null;
 
             return (
               <NavLink
