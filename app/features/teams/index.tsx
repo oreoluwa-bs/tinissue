@@ -1,7 +1,14 @@
 import { db } from "~/db/db.server";
-import { createTeamSchema, type ICreateTeam } from "./shared";
+import {
+  createTeamSchema,
+  type IEditTeam,
+  type ICreateTeam,
+  editTeamSchema,
+} from "./shared";
 import { teamMembers, teams } from "~/db/schema/teams";
 import { and, eq, or } from "drizzle-orm";
+import { removeEmptyFields } from "~/lib/utils";
+import { defineAbilityFor } from "./permissions";
 
 export function slugifyAndAddRandomSuffix(
   str: string,
@@ -81,4 +88,41 @@ export async function getTeamMember(teamId: number, userId: number) {
         and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId)),
       )
   )[0];
+}
+
+export async function editTeam(data: IEditTeam, userId: number) {
+  const teamData = editTeamSchema.parse(data);
+
+  const { id, ...valuesToUpdate } = removeEmptyFields(teamData);
+
+  const teamMember = await getTeamMember(id, userId);
+
+  const ability = defineAbilityFor(teamMember);
+
+  if (ability.cannot("edit", "Team")) {
+    throw new Error("You do not have permission to edit this team");
+  }
+
+  await db
+    .update(teams)
+    .set({ ...valuesToUpdate })
+    .where(eq(teams.id, id));
+}
+
+export async function deleteTeam(teamId: number, userId: number) {
+  const teamMember = await getTeamMember(teamId, userId);
+
+  const ability = defineAbilityFor(teamMember);
+
+  if (ability.cannot("delete", "Team")) {
+    throw new Error("You do not have permission to delete this team");
+  }
+
+  // await db.delete(teams).where(eq(teams.id, teamId));
+
+  // await db.
+  await db
+    .update(teams)
+    .set({ deletedAt: new Date() })
+    .where(eq(teams.id, teamId));
 }
