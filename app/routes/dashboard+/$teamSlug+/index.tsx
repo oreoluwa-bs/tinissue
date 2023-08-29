@@ -60,14 +60,7 @@ export async function action({ params, request }: ActionArgs) {
     if (method === "DELETE") {
       await deleteTeam(team.id, userId);
 
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-          formErrors: null,
-        },
-        { status: 200 },
-      );
+      return redirect("/dashboard");
     }
 
     throw new MethodNotSupported();

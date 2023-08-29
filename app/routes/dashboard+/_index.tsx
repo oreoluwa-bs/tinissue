@@ -8,7 +8,8 @@ export async function loader({ params, request }: LoaderArgs) {
 
   const userTeams = await getUserTeams(userId);
 
-  const pickedTeam = userTeams[0]; // swapp for persisted option
+  const pickedTeam =
+    userTeams.find((te) => te.teams.type === "PERSONAL") ?? userTeams[0]; // swapp for persisted option
 
   if (pickedTeam) {
     return redirect(`/dashboard/${pickedTeam.teams?.slug}`);

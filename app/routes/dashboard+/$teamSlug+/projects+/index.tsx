@@ -96,8 +96,8 @@ export async function loader({ params, request }: LoaderArgs) {
     (item) => item.teams.slug === params["teamSlug"],
   );
 
-  if (!currentTeam) {
-    return redirect("/404", { status: 404 });
+  if (!currentTeam || !currentTeam.teams) {
+    return redirect("/404");
   }
 
   const url = new URL(request.url);

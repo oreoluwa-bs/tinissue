@@ -27,7 +27,7 @@ export async function loader({ params, request }: LoaderArgs) {
 
   const team = await getTeam(params.teamSlug!);
 
-  if (team.type === "PERSONAL") {
+  if (team.type === "PERSONAL" || !team) {
     return redirect("/404");
   }
 
@@ -114,7 +114,7 @@ function EditProjectForm({ team, teamSlug }: EditProjectFormProps) {
           <AlertDescription>{fetcher.data?.formErrors}</AlertDescription>
         </Alert>
       ) : null}
-      <fetcher.Form method="PATCH" action={`/dashboard/${team.slug}/`}>
+      <fetcher.Form method="PATCH" action={`/dashboard/${team.slug}?index`}>
         {/* <input
         name="id"
         id="id"
@@ -192,7 +192,10 @@ function DeleteTeam({ team, teamSlug }: BaseSettingsProps) {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <fetcher.Form method="DELETE" action={`/dashboard/${teamSlug}/`}>
+              <fetcher.Form
+                method="DELETE"
+                action={`/dashboard/${teamSlug}?index`}
+              >
                 <AlertDialogAction
                   type="submit"
                   disabled={fetcher.state === "submitting"}

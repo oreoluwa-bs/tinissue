@@ -6,7 +6,7 @@ import {
   editTeamSchema,
 } from "./shared";
 import { teamMembers, teams } from "~/db/schema/teams";
-import { and, eq, or } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, or } from "drizzle-orm";
 import { removeEmptyFields } from "~/lib/utils";
 import { defineAbilityFor } from "./permissions";
 import { Unauthorised } from "~/lib/errors";
@@ -59,7 +59,23 @@ export async function getUserTeams(userId: number) {
     .select()
     .from(teamMembers)
     .where(eq(teamMembers.userId, userId))
-    .innerJoin(teams, eq(teamMembers.teamId, teams.id));
+    .innerJoin(
+      teams,
+      and(eq(teamMembers.teamId, teams.id), isNull(teams.deletedAt)),
+    );
+
+  return userTeams;
+}
+
+export async function getPendingDeletedTeams(userId: number) {
+  const userTeams = await db
+    .select()
+    .from(teamMembers)
+    .where(eq(teamMembers.userId, userId))
+    .innerJoin(
+      teams,
+      and(eq(teamMembers.teamId, teams.id), isNotNull(teams.deletedAt)),
+    );
 
   return userTeams;
 }
@@ -70,9 +86,12 @@ export async function getTeam(idOrSlug: string | number) {
       .select()
       .from(teams)
       .where(
-        or(
-          eq(teams.id, idOrSlug as number),
-          eq(teams.slug, idOrSlug as string),
+        and(
+          or(
+            eq(teams.id, idOrSlug as number),
+            eq(teams.slug, idOrSlug as string),
+          ),
+          isNull(teams.deletedAt),
         ),
       )
   )[0];
