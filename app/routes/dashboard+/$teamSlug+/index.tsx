@@ -7,6 +7,7 @@ import {
 import { requireUserId } from "~/features/auth";
 import { deleteTeam, editTeam, getTeam } from "~/features/teams";
 import { editTeamSchema } from "~/features/teams/shared";
+import { APIError, InternalServerError, NotFound } from "~/lib/errors";
 
 export async function action({ params, request }: ActionArgs) {
   const userId = await requireUserId(request);
@@ -15,36 +16,30 @@ export async function action({ params, request }: ActionArgs) {
 
   const method = request.method;
 
-  const team = await getTeam(params.teamSlug as string);
+  try {
+    const team = await getTeam(params.teamSlug as string);
 
-  if (!team)
-    return json(
-      {
-        fields: formObject,
-        fieldErrors: null,
-        formErrors: "Team not found",
-      },
-      { status: 404 },
-    );
-
-  if (method === "PATCH") {
-    const credentials = editTeamSchema.safeParse({
-      ...formObject,
-      id: team.id,
-    });
-
-    if (!credentials.success) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: credentials.error.flatten().fieldErrors,
-          formErrors: credentials.error.flatten().formErrors.join(", "),
-        },
-        { status: 400 },
-      );
+    if (!team) {
+      throw new NotFound();
     }
 
-    try {
+    if (method === "PATCH") {
+      const credentials = editTeamSchema.safeParse({
+        ...formObject,
+        id: team.id,
+      });
+
+      if (!credentials.success) {
+        return json(
+          {
+            fields: formObject,
+            fieldErrors: credentials.error.flatten().fieldErrors,
+            formErrors: credentials.error.flatten().formErrors.join(", "),
+          },
+          { status: 400 },
+        );
+      }
+
       await editTeam(credentials.data, userId);
 
       return json(
@@ -55,24 +50,9 @@ export async function action({ params, request }: ActionArgs) {
         },
         { status: 201 },
       );
-    } catch (error) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-
-          formErrors:
-            error instanceof Error
-              ? error.message
-              : "Something unexpected happened",
-        },
-        { status: 400 },
-      );
     }
-  }
 
-  if (method === "DELETE") {
-    try {
+    if (method === "DELETE") {
       await deleteTeam(team.id, userId);
 
       return json(
@@ -81,32 +61,21 @@ export async function action({ params, request }: ActionArgs) {
           fieldErrors: null,
           formErrors: null,
         },
-        { status: 201 },
-      );
-    } catch (error) {
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-
-          formErrors:
-            error instanceof Error
-              ? error.message
-              : "Something unexpected happened",
-        },
-        { status: 400 },
+        { status: 200 },
       );
     }
-  }
+  } catch (err) {
+    let error = err instanceof APIError ? err : new InternalServerError();
 
-  return json(
-    {
-      fields: formObject,
-      fieldErrors: null,
-      formErrors: "Method not found",
-    },
-    { status: 400 },
-  );
+    return json(
+      {
+        fields: formObject,
+        fieldErrors: null,
+        formErrors: error.message,
+      },
+      { status: error.statusCode },
+    );
+  }
 }
 
 export async function loader({ params, request }: LoaderArgs) {

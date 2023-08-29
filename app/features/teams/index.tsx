@@ -9,6 +9,7 @@ import { teamMembers, teams } from "~/db/schema/teams";
 import { and, eq, or } from "drizzle-orm";
 import { removeEmptyFields } from "~/lib/utils";
 import { defineAbilityFor } from "./permissions";
+import { Unauthorised } from "~/lib/errors";
 
 export function slugifyAndAddRandomSuffix(
   str: string,
@@ -100,7 +101,7 @@ export async function editTeam(data: IEditTeam, userId: number) {
   const ability = defineAbilityFor(teamMember);
 
   if (ability.cannot("edit", "Team")) {
-    throw new Error("You do not have permission to edit this team");
+    throw new Unauthorised("You do not have permission to edit this team");
   }
 
   await db
@@ -115,7 +116,7 @@ export async function deleteTeam(teamId: number, userId: number) {
   const ability = defineAbilityFor(teamMember);
 
   if (ability.cannot("delete", "Team")) {
-    throw new Error("You do not have permission to delete this team");
+    throw new Unauthorised("You do not have permission to delete this team");
   }
 
   // await db.delete(teams).where(eq(teams.id, teamId));
