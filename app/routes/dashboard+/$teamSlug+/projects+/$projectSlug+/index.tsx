@@ -216,7 +216,8 @@ export default function ProjectRoute() {
               );
             })}
           </div>
-          <DragOverlay dropAnimation={{ duration: 300 }}>
+
+          <DragOverlay dropAnimation={{ duration: 300 }} zIndex={9999}>
             {isDragging && activeMilestone ? (
               <MilestoneKanbanCard
                 milestone={{
@@ -440,7 +441,8 @@ function DraggableCard({
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      className={cn("touch-none transition-opacity", isDragging && "opacity-0")}
+      // Do not add transition duration it causes a flash
+      className={cn("touch-none", isDragging && "opacity-0")}
     >
       {children}
     </div>
