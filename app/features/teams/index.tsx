@@ -4,12 +4,18 @@ import {
   type IEditTeam,
   type ICreateTeam,
   editTeamSchema,
+  type IDeleteTeamMember,
+  deleteTeamMemberSchema,
+  type IEditTeamMember,
+  editTeamMemberSchema,
 } from "./shared";
 import { teamMembers, teams } from "~/db/schema/teams";
 import { and, eq, isNotNull, isNull, or } from "drizzle-orm";
 import { generateAvatarThumbnail, removeEmptyFields } from "~/lib/utils";
 import { defineAbilityFor } from "./permissions";
 import { Unauthorised } from "~/lib/errors";
+import { users } from "~/db/schema";
+import { userSelect } from "../user/utils";
 
 export function slugifyAndAddRandomSuffix(
   str: string,
@@ -108,6 +114,25 @@ export async function getTeam(idOrSlug: string | number) {
   return team;
 }
 
+export async function getTeamMembers(teamId: number, userId: number) {
+  const membersList = await db
+    .select({
+      team_members: teamMembers,
+      user: userSelect(users),
+    })
+    .from(teamMembers)
+    .where(and(eq(teamMembers.teamId, teamId)))
+    .innerJoin(users, eq(teamMembers.userId, users.id));
+
+  const hasAccess = membersList.filter((o) => o.team_members.userId === userId);
+
+  if (!hasAccess) {
+    throw new Unauthorised();
+  }
+
+  return membersList;
+}
+
 export async function getTeamMember(teamId: number, userId: number) {
   return (
     await db
@@ -117,6 +142,56 @@ export async function getTeamMember(teamId: number, userId: number) {
         and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId)),
       )
   )[0];
+}
+
+export async function editTeamMember(data: IEditTeamMember, userId: number) {
+  const teamData = editTeamMemberSchema.parse(data);
+
+  const teamMember = await getTeamMember(teamData.id, userId);
+
+  const ability = defineAbilityFor(teamMember);
+
+  if (ability.cannot("edit", "Team")) {
+    throw new Unauthorised(
+      "You do not have permission to edit this team member",
+    );
+  }
+
+  await db
+    .update(teamMembers)
+    .set({ role: teamData.role })
+    .where(
+      and(
+        eq(teamMembers.teamId, teamData.id),
+        eq(teamMembers.userId, teamData.userId),
+      ),
+    );
+}
+
+export async function deleteTeamMember(
+  data: IDeleteTeamMember,
+  userId: number,
+) {
+  const teamData = deleteTeamMemberSchema.parse(data);
+
+  const teamMember = await getTeamMember(teamData.id, userId);
+
+  const ability = defineAbilityFor(teamMember);
+
+  if (ability.cannot("delete", "Team")) {
+    throw new Unauthorised(
+      "You do not have permission to remove this team member",
+    );
+  }
+
+  await db
+    .delete(teamMembers)
+    .where(
+      and(
+        eq(teamMembers.teamId, teamData.id),
+        eq(teamMembers.userId, teamData.userId),
+      ),
+    );
 }
 
 export async function editTeam(data: IEditTeam, userId: number) {
