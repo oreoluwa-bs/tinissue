@@ -10,7 +10,7 @@ import {
   editTeamMemberSchema,
 } from "./shared";
 import { teamMembers, teams } from "~/db/schema/teams";
-import { and, eq, isNotNull, isNull, or } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { generateAvatarThumbnail, removeEmptyFields } from "~/lib/utils";
 import { defineAbilityFor } from "./permissions";
 import { Unauthorised } from "~/lib/errors";
@@ -114,7 +114,21 @@ export async function getTeam(idOrSlug: string | number) {
   return team;
 }
 
-export async function getTeamMembers(teamId: number, userId: number) {
+type GetTeamMembersFilters = Partial<{
+  query: string;
+}>;
+export async function getTeamMembers(
+  teamId: number,
+  userId: number,
+  filters?: GetTeamMembersFilters,
+) {
+  const hasAccess = await getTeamMember(teamId, userId);
+
+  if (!hasAccess) {
+    throw new Unauthorised();
+  }
+  const { query } = filters ?? {};
+
   const membersList = await db
     .select({
       team_members: teamMembers,
@@ -122,13 +136,19 @@ export async function getTeamMembers(teamId: number, userId: number) {
     })
     .from(teamMembers)
     .where(and(eq(teamMembers.teamId, teamId)))
-    .innerJoin(users, eq(teamMembers.userId, users.id));
+    .innerJoin(
+      users,
+      and(
+        eq(teamMembers.userId, users.id),
+        (query?.trim().length ?? 0) > 0
+          ? sql`CONCAT(${users.firstName},' ', ${users.lastName}) LIKE ${
+              "%" + query + "%"
+            }`
+          : isNotNull(users.id),
+      ),
+    );
 
-  const hasAccess = membersList.filter((o) => o.team_members.userId === userId);
-
-  if (!hasAccess) {
-    throw new Unauthorised();
-  }
+  // const hasAccess = membersList.filter((o) => o.team_members.userId === userId);
 
   return membersList;
 }
