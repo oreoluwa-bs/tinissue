@@ -293,7 +293,7 @@ function TeamSwitcher({
           >
             <Avatar className="mr-2 h-5 w-5">
               <AvatarImage
-                src={currentTeam.profileImage ?? "/favicon.ico"}
+                src={currentTeam.profileImage ?? undefined}
                 alt={currentTeam.name ?? ""}
               />
               <AvatarFallback>{currentTeam.name?.[0]}</AvatarFallback>
