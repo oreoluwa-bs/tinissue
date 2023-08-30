@@ -144,7 +144,7 @@ function Navbar({ user, teams, currentTeam, prefs }: NavbarProps) {
   const fetcher = useFetcher();
   // const avatarColor = generateAvatarGradient(user.firstName!, user.lastName!);
   return (
-    <header className="border-border-300 sticky top-0 border-b bg-background px-6 py-2">
+    <header className="border-border-300 sticky top-0 z-20 border-b bg-background px-6 py-2">
       <div className="flex  items-center justify-between">
         <div className="inline-flex items-center gap-5">
           <img src="/favicon.ico" alt="logo" className="w-8" />

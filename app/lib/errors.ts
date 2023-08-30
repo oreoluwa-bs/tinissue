@@ -21,7 +21,7 @@ export class BadRequest extends APIError {
 }
 
 export class Unauthorised extends APIError {
-  constructor(message = "Unauthorized") {
+  constructor(message = "You don't have permission to access this.") {
     super(401, message);
   }
 }
