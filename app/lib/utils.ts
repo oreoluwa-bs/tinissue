@@ -38,3 +38,24 @@ export function sleep(delay = 5000) {
     }, delay);
   });
 }
+
+export function generateAvatarThumbnail(
+  text: string,
+  options?: Partial<{ debug: boolean }>,
+) {
+  const extra = options && formatURLSearchParams(options).toString;
+
+  return `/thumbnaills/gen/avatar?text=${text}${
+    extra && `&${formatURLSearchParams}`
+  }`;
+}
+
+const formatURLSearchParams = (data: Record<string, any>) => {
+  let modifiedData: Record<string, string> = {};
+
+  Object.keys(data).forEach((key: string) => {
+    modifiedData[key] = data[key];
+  });
+
+  return new URLSearchParams(modifiedData);
+};

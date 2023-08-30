@@ -9,6 +9,6 @@ export function userSelect(table: typeof users) {
     fullName: sql<string>`CONCAT(${table.firstName},' ', ${table.lastName})`,
     initials: sql<string>`CONCAT(LEFT(${table.firstName}, 1),LEFT(${table.lastName}, 1))`,
     email: table.email,
-    profilePhoto: sql<string>`CONCAT('','')`,
+    profilePhoto: table.profilePhoto,
   };
 }

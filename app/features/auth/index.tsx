@@ -14,12 +14,13 @@ import {
   redirect,
 } from "@remix-run/node";
 import { env } from "~/env";
+import { generateAvatarThumbnail } from "~/lib/utils";
 
 export async function credentialsLogin(credentials: ICredentialsLogin) {
   credentialsLoginSchema.parse(credentials);
 
   const usersRow = await db
-    .selectDistinct()
+    .select()
     .from(users)
     .where(eq(users.email, credentials.email.toLowerCase()));
 
@@ -50,10 +51,7 @@ export async function credentialsSignUp(credentials: ICredentialsSignUp) {
 
   const email = credentials.email.toLowerCase();
 
-  const usersRow = await db
-    .selectDistinct()
-    .from(users)
-    .where(eq(users.email, email));
+  const usersRow = await db.select().from(users).where(eq(users.email, email));
 
   const existingUser = usersRow[0];
 
@@ -61,14 +59,24 @@ export async function credentialsSignUp(credentials: ICredentialsSignUp) {
 
   const passwordHash = await bcrypt.hash(credentials.password, 10);
 
+  const defaultProfile = generateAvatarThumbnail(
+    credentials.firstName +
+      " " +
+      credentials.lastName
+        .split(" ")
+        .map((i) => i[0].toUpperCase()) // Get initials
+        .join(""),
+  );
+
   await db.insert(users).values({
     ...credentials,
     email,
     password: passwordHash,
+    profilePhoto: defaultProfile,
   });
 
   const newUser = (
-    await db.selectDistinct().from(users).where(eq(users.email, email))
+    await db.select().from(users).where(eq(users.email, email))
   )[0];
 
   return {

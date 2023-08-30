@@ -7,7 +7,7 @@ import {
 } from "./shared";
 import { teamMembers, teams } from "~/db/schema/teams";
 import { and, eq, isNotNull, isNull, or } from "drizzle-orm";
-import { removeEmptyFields } from "~/lib/utils";
+import { generateAvatarThumbnail, removeEmptyFields } from "~/lib/utils";
 import { defineAbilityFor } from "./permissions";
 import { Unauthorised } from "~/lib/errors";
 
@@ -35,9 +35,16 @@ export async function createTeam(
   await db.transaction(async (tx) => {
     const slug = customSlug ?? slugifyAndAddRandomSuffix(teamData.name);
 
+    const defaultProfile = generateAvatarThumbnail(
+      teamData.name
+        .split(" ")
+        .map((i) => i[0].toUpperCase()) // Get initials
+        .join(""),
+    );
+
     await tx.insert(teams).values({
       name: teamData.name,
-      profileImage: teamData.profileImage,
+      profileImage: teamData.profileImage ?? defaultProfile,
       type: teamData.type,
       slug,
     });

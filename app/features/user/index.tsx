@@ -1,18 +1,11 @@
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "~/db/db.server";
 import { users } from "~/db/schema/users";
+import { userSelect } from "./utils";
 
 export async function getUserProfile(userId: number) {
   const userRows = await db
-    .selectDistinct({
-      id: users.id,
-      firstName: users.firstName,
-      lastName: users.lastName,
-      fullName: sql`CONCAT(${users.firstName},' ', ${users.lastName})`,
-      initials: sql`CONCAT(LEFT(${users.firstName}, 1),LEFT(${users.lastName}, 1))`,
-      email: users.email,
-      profilePhoto: sql`CONCAT('','')`,
-    })
+    .select(userSelect(users))
     .from(users)
     .where(eq(users.id, userId));
 
