@@ -16,7 +16,7 @@ export default function SettingsLayout() {
       {/* height of sticky nav */}
       <aside
         className={cn(
-          "fixed left-0 top-[105px]  w-full  self-start transition-transform md:sticky md:px-0",
+          "fixed left-0 top-[105px] z-[1]  w-full  self-start transition-transform md:sticky md:px-0",
 
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         )}
