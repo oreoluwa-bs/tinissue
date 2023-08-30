@@ -41,7 +41,7 @@ interface CreateMilestoneFormProps {
     firstName: string | null;
     initials: string;
     lastName: string | null;
-    profilePhoto: string;
+    profilePhoto: string | null;
   }[];
   status: "BACKLOG" | "TODO" | "IN PROGRESS" | "DONE" | "CANCELLED";
   teamSlug: string;
@@ -195,7 +195,7 @@ export function CreateMilestoneForm({
                               className="mr-2 h-6 w-6 text-xs"
                             >
                               <AvatarImage
-                                src={member?.profilePhoto}
+                                src={member?.profilePhoto ?? undefined}
                                 alt={member?.fullName}
                               />
                               <AvatarFallback>

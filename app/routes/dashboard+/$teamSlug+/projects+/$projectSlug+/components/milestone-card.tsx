@@ -71,7 +71,7 @@ interface ProjectCardProps {
     email: string;
     fullName: string;
     initials: string;
-    profilePhoto: string;
+    profilePhoto: string | null;
   }[];
 
   projectSlug: string;
@@ -145,7 +145,7 @@ export function MilestoneKanbanCard({
                       className="h-7 w-7 touch-none text-xs outline outline-foreground/10"
                     >
                       <AvatarImage
-                        src={member?.profilePhoto}
+                        src={member?.profilePhoto ?? undefined}
                         alt={member?.fullName}
                       />
                       <AvatarFallback>{member?.initials}</AvatarFallback>

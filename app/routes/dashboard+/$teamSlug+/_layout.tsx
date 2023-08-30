@@ -156,7 +156,10 @@ function Navbar({ user, teams, currentTeam, prefs }: NavbarProps) {
           <DropdownMenu>
             <DropdownMenuTrigger>
               <Avatar className="h-10 w-10 text-sm">
-                <AvatarImage src={user.profilePhoto} alt={user.fullName} />
+                <AvatarImage
+                  src={user.profilePhoto ?? undefined}
+                  alt={user.fullName}
+                />
                 <AvatarFallback
                 // style={{
                 //   background: avatarColor.gradient,
