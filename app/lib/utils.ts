@@ -45,7 +45,7 @@ export function generateAvatarThumbnail(
 ) {
   const extra = options && formatURLSearchParams(options).toString;
 
-  return `/thumbnaills/gen/avatar?text=${text}${
+  return `/thumbnails/gen/avatar?text=${text}${
     extra && `&${formatURLSearchParams}`
   }`;
 }

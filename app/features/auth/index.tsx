@@ -60,12 +60,10 @@ export async function credentialsSignUp(credentials: ICredentialsSignUp) {
   const passwordHash = await bcrypt.hash(credentials.password, 10);
 
   const defaultProfile = generateAvatarThumbnail(
-    credentials.firstName +
-      " " +
-      credentials.lastName
-        .split(" ")
-        .map((i) => i[0].toUpperCase()) // Get initials
-        .join(""),
+    (credentials.firstName + " " + credentials.lastName)
+      .split(" ")
+      .map((i) => i[0].toUpperCase()) // Get initials
+      .join(""),
   );
 
   await db.insert(users).values({
