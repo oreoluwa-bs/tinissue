@@ -1,26 +1,27 @@
-import { db } from "~/db/db.server";
-import {
-  createTeamSchema,
-  type IEditTeam,
-  type ICreateTeam,
-  editTeamSchema,
-  type IDeleteTeamMember,
-  deleteTeamMemberSchema,
-  type IEditTeamMember,
-  editTeamMemberSchema,
-  type IInviteToTeam,
-  inviteToTeamSchema,
-} from "./shared";
-import { teamInvites, teamMembers, teams } from "~/db/schema/teams";
 import { and, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
-import { generateAvatarThumbnail, removeEmptyFields } from "~/lib/utils";
-import { defineAbilityFor } from "./permissions";
-import { BadRequest, Unauthorised } from "~/lib/errors";
+import jwt from "jsonwebtoken";
+import { db } from "~/db/db.server";
 import { users } from "~/db/schema";
+import { teamInvites, teamMembers, teams } from "~/db/schema/teams";
+import { env } from "~/env";
+import { BadRequest, Unauthorised } from "~/lib/errors";
+import { generateAvatarThumbnail, removeEmptyFields } from "~/lib/utils";
+import { getUserByEmail } from "../user";
 import { userSelect } from "../user/utils";
 import { TEAM_EVENTS, teamEvent } from "./event.server";
-import jwt from "jsonwebtoken";
-import { env } from "~/env";
+import { defineAbilityFor } from "./permissions";
+import {
+  createTeamSchema,
+  deleteTeamMemberSchema,
+  editTeamMemberSchema,
+  editTeamSchema,
+  inviteToTeamSchema,
+  type ICreateTeam,
+  type IDeleteTeamMember,
+  type IEditTeam,
+  type IEditTeamMember,
+  type IInviteToTeam,
+} from "./shared";
 
 export function slugifyAndAddRandomSuffix(
   str: string,
@@ -265,7 +266,8 @@ export async function inviteToTeam(data: IInviteToTeam, userId: number) {
   const teamMembers = await getTeamMembers(teamInviteData.teamId, userId);
 
   const teamMember = teamMembers.find((i) => i.team_members.userId === userId);
-  if (!teamMember || teamMember.team_members) {
+
+  if (!teamMember || !teamMember.team_members) {
     throw new Unauthorised(
       "You do not have permission to invite a user to this team",
     );
@@ -325,4 +327,57 @@ export async function inviteToTeam(data: IInviteToTeam, userId: number) {
       expiryInDays: INVITE_WINDOW_IN_DAYS,
     },
   });
+}
+
+export async function acceptInviteToTeam(token: string) {
+  const claims = verifyInvitationToken(token);
+
+  if (typeof claims === "string") {
+    throw new BadRequest(claims);
+  }
+
+  const user = await getUserByEmail(claims["email"]);
+
+  if (!user) {
+    throw new Unauthorised(undefined, { email: claims["email"] });
+  }
+
+  const team = await getTeam(claims["teamId"]);
+
+  await db.transaction(async (tx) => {
+    // await tx
+    //   .update(teamInvites)
+    //   .set({
+    //     accepted: true,
+    //   })
+    //   .where(
+    //     and(
+    //       eq(teamInvites.teamId, claims["teamId"]),
+    //       eq(teamInvites.email, claims["email"]),
+    //     ),
+    //   );
+
+    await tx.insert(teamMembers).values({
+      teamId: claims["teamId"],
+      userId: user.id,
+      role: "MEMBER",
+    });
+
+    await tx
+      .delete(teamInvites)
+      .where(
+        and(
+          eq(teamInvites.teamId, claims["teamId"]),
+          eq(teamInvites.email, claims["email"]),
+        ),
+      );
+  });
+
+  return {
+    team,
+  };
+}
+
+export function verifyInvitationToken(token: string) {
+  return jwt.verify(token, env.JWT_SECRET);
 }

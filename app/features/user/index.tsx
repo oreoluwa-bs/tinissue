@@ -13,3 +13,14 @@ export async function getUserProfile(userId: number) {
 
   return user;
 }
+
+export async function getUserByEmail(email: string) {
+  const userRows = await db
+    .select(userSelect(users))
+    .from(users)
+    .where(eq(users.email, email));
+
+  const user = userRows[0];
+
+  return user ?? null;
+}
