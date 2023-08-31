@@ -8,6 +8,7 @@ import {
   uniqueIndex,
   varchar,
   int,
+  boolean,
 } from "drizzle-orm/mysql-core";
 import { users } from "./users";
 import { projectMembers, projects } from "./projects";
@@ -38,6 +39,7 @@ export const teamsRelations = relations(teams, ({ many }) => ({
   members: many(teamMembers),
   projects: many(projects),
   projectMembers: many(projectMembers),
+  invites: many(teamInvites),
 }));
 
 export const teamMembers = mysqlTable(
@@ -55,3 +57,15 @@ export const teamMembers = mysqlTable(
     pk: primaryKey(t.userId, t.teamId),
   }),
 );
+
+export const teamInvites = mysqlTable("team_invites", {
+  id: int("id").autoincrement().primaryKey(),
+  email: text("email").notNull(),
+  teamId: int("team_id")
+    .notNull()
+    .references(() => teams.id, { onUpdate: "cascade", onDelete: "cascade" }),
+  accepted: boolean("accepted").default(false),
+
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").onUpdateNow(),
+});
