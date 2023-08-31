@@ -10,6 +10,7 @@ const schema = z.object({
     .default("development"),
 
   SESSION_SECRET: z.string(),
+  JWT_SECRET: z.string(),
 });
 
 const _env = schema.safeParse(process.env);
