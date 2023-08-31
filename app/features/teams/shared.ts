@@ -152,3 +152,35 @@ export const deleteTeamMemberSchema = z.object({
     }),
 });
 export type IDeleteTeamMember = z.infer<typeof deleteTeamMemberSchema>;
+
+/**
+ * Team Invitations
+ */
+export const inviteToTeamSchema = z.object({
+  teamId: z
+    .union([z.number(), z.string()], {
+      // invalid_type_error: "Invalid team",
+      // required_error: "Team is required",
+      errorMap: (issue, ctx) => {
+        if (issue.code === z.ZodIssueCode.invalid_union) {
+          return { message: "Invalid team" };
+        }
+        return { message: ctx.defaultError };
+      },
+    })
+    .transform((v, ctx) => {
+      const parsed = Number(v);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid team",
+        });
+
+        return z.NEVER;
+      }
+      return parsed;
+    }),
+
+  email: z.string({ required_error: "Email is required" }).email(),
+});
+export type IInviteToTeam = z.infer<typeof inviteToTeamSchema>;

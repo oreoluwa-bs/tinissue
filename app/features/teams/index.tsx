@@ -8,14 +8,19 @@ import {
   deleteTeamMemberSchema,
   type IEditTeamMember,
   editTeamMemberSchema,
+  type IInviteToTeam,
+  inviteToTeamSchema,
 } from "./shared";
-import { teamMembers, teams } from "~/db/schema/teams";
+import { teamInvites, teamMembers, teams } from "~/db/schema/teams";
 import { and, eq, isNotNull, isNull, or, sql } from "drizzle-orm";
 import { generateAvatarThumbnail, removeEmptyFields } from "~/lib/utils";
 import { defineAbilityFor } from "./permissions";
-import { Unauthorised } from "~/lib/errors";
+import { BadRequest, Unauthorised } from "~/lib/errors";
 import { users } from "~/db/schema";
 import { userSelect } from "../user/utils";
+import { TEAM_EVENTS, teamEvent } from "./event.server";
+import jwt from "jsonwebtoken";
+import { env } from "~/env";
 
 export function slugifyAndAddRandomSuffix(
   str: string,
@@ -249,4 +254,75 @@ export async function deleteTeam(teamId: number, userId: number) {
     .update(teams)
     .set({ deletedAt: new Date() })
     .where(eq(teams.id, teamId));
+}
+
+/**
+ * Team Invitations
+ */
+export async function inviteToTeam(data: IInviteToTeam, userId: number) {
+  const teamInviteData = inviteToTeamSchema.parse(data);
+
+  const teamMembers = await getTeamMembers(teamInviteData.teamId, userId);
+
+  const teamMember = teamMembers.find((i) => i.team_members.userId === userId);
+  if (!teamMember || teamMember.team_members) {
+    throw new Unauthorised(
+      "You do not have permission to invite a user to this team",
+    );
+  }
+
+  const ability = defineAbilityFor(teamMember.team_members);
+
+  if (ability.cannot("edit", "Team")) {
+    throw new Unauthorised(
+      "You do not have permission to invite a user to this team",
+    );
+  }
+
+  const INVITE_WINDOW_IN_DAYS = 7;
+
+  const existingInvite = await db
+    .select()
+    .from(teamInvites)
+    .where(
+      and(
+        eq(teamInvites.teamId, teamInviteData.teamId),
+        eq(teamInvites.email, teamInviteData.email),
+        sql`DATEDIFF(NOW(), ${teamInvites.createdAt}) < ${INVITE_WINDOW_IN_DAYS}`,
+      ),
+    );
+
+  /**
+   * Refactor
+   * - existing invite expiry
+   */
+
+  if (existingInvite.length > 0) {
+    throw new BadRequest("You have already invited this user.");
+    // return;
+  }
+
+  await db.insert(teamInvites).values({
+    teamId: teamInviteData.teamId,
+    email: teamInviteData.email,
+  });
+
+  const team = await getTeam(teamInviteData.teamId);
+
+  // Generate token
+  const token = jwt.sign(
+    { teamId: teamInviteData.teamId, email: teamInviteData.email },
+    env.JWT_SECRET,
+    { expiresIn: "7d" },
+  );
+
+  teamEvent.emit(TEAM_EVENTS.NEW_INVITE, {
+    user: { email: teamInviteData.email },
+    team: { name: team.name },
+    invitee: { name: teamMember.user.firstName },
+    token: {
+      token,
+      expiryInDays: INVITE_WINDOW_IN_DAYS,
+    },
+  });
 }
