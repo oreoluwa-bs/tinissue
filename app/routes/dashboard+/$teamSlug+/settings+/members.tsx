@@ -1,45 +1,24 @@
-import { requireUserId } from "~/features/auth";
-import { MembersDataTable } from "./components/members-data-table";
+import { AlertDialogTitle } from "@radix-ui/react-alert-dialog";
+import { DialogTitle } from "@radix-ui/react-dialog";
 import {
-  deleteTeamMember,
-  editTeamMember,
-  getTeam,
-  getTeamMembers,
-} from "~/features/teams";
-import {
-  type LoaderArgs,
-  redirect,
   json,
+  redirect,
   type ActionArgs,
+  type LoaderArgs,
 } from "@remix-run/node";
 import {
+  Form,
+  useActionData,
   useFetcher,
   useLoaderData,
   useLocation,
   useNavigation,
   useSearchParams,
 } from "@remix-run/react";
-import { type Row, createColumnHelper } from "@tanstack/react-table";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  // DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
+import { createColumnHelper, type Row } from "@tanstack/react-table";
 import { Loader2Icon, MoreHorizontalIcon, SearchIcon } from "lucide-react";
-import { useToast } from "~/components/ui/use-toast";
-import { buttonVariants } from "~/components/ui/button";
 import { useEffect, useState } from "react";
+import { ZodError } from "zod";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,16 +29,49 @@ import {
   AlertDialogHeader,
   AlertDialogTrigger,
 } from "~/components/ui/alert-dialog";
-import { AlertDialogTitle } from "@radix-ui/react-alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Button, buttonVariants } from "~/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTrigger,
+} from "~/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  // DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
+import { FormError } from "~/components/ui/form";
+import { Input } from "~/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { useToast } from "~/components/ui/use-toast";
+import { requireUserId } from "~/features/auth";
+import {
+  deleteTeamMember,
+  editTeamMember,
+  getTeam,
+  getTeamMembers,
+  inviteToTeam,
+} from "~/features/teams";
 import {
   APIError,
   InternalServerError,
   MethodNotSupported,
   NotFound,
 } from "~/lib/errors";
-import { ZodError } from "zod";
-import { Input } from "~/components/ui/input";
 import { cn } from "~/lib/utils";
+import { MembersDataTable } from "./components/members-data-table";
 
 export async function action({ params, request }: ActionArgs) {
   const userId = await requireUserId(request);
@@ -76,7 +88,11 @@ export async function action({ params, request }: ActionArgs) {
     }
 
     if (method === "POST") {
-      throw new Error("Not Yet implemented");
+      const credentials = { teamId: team.id, ...formObject } as Parameters<
+        typeof inviteToTeam
+      >[0];
+
+      await inviteToTeam(credentials, userId);
     }
 
     if (method === "PATCH") {
@@ -373,6 +389,7 @@ export default function MembersRoute() {
   const navigation = useNavigation();
   const location = useLocation();
   const loaderData = useLoaderData<typeof loader>();
+  const actionData = useActionData<typeof action>();
   const [searchParams, setSearchParams] = useSearchParams();
   // const fetcher = useFetcher();
 
@@ -386,6 +403,23 @@ export default function MembersRoute() {
   const isSearching =
     navigation.state !== "idle" &&
     navigation.location.pathname === location.pathname;
+
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (navigation.state === "idle" && actionData) {
+      if ((actionData.formErrors?.length ?? 0) > 0 || actionData.fieldErrors) {
+        toast({
+          title: "Something went wrong",
+          description:
+            actionData.formErrors ||
+            Object.entries(actionData.fieldErrors as any)
+              .map(([key, value]) => value)
+              .join("\n"),
+        });
+      }
+    }
+  }, [actionData, navigation.state, toast]);
 
   return (
     <main>
@@ -445,6 +479,25 @@ export default function MembersRoute() {
               })}
           </DropdownMenuContent>
         </DropdownMenu> */}
+          <div>
+            <Dialog>
+              <DialogTrigger>Add Member</DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Invite to team</DialogTitle>
+                  <DialogDescription>
+                    Add a member to {loaderData.team.name}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <InviteToTeamForm
+                  Form={Form}
+                  data={actionData}
+                  state={navigation.state}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <MembersDataTable
@@ -472,5 +525,36 @@ export default function MembersRoute() {
         />
       </div>
     </main>
+  );
+}
+
+type InviteToTeamFormProps = {
+  Form: typeof Form;
+  data: any;
+  state: "submitting" | "idle" | "loading";
+};
+function InviteToTeamForm({ Form, data, state }: InviteToTeamFormProps) {
+  return (
+    <Form method="POST">
+      <div className="space-y-4">
+        <div>
+          <Input
+            type="email"
+            name="email"
+            id="email"
+            placeholder="Email Address"
+            defaultValue={data?.fields?.email}
+            aria-invalid={Boolean(data?.fieldErrors?.email)}
+            aria-errormessage={data?.fieldErrors?.email?.join(", ")}
+          />
+          <FormError>{data?.fieldErrors?.email}</FormError>
+        </div>
+        <div>
+          <Button type="submit" disabled={state === "submitting"}>
+            Invite
+          </Button>
+        </div>
+      </div>
+    </Form>
   );
 }

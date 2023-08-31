@@ -54,7 +54,7 @@ export async function action({ request }: ActionArgs) {
       );
       authEvent.emit(AUTH_EVENTS.NEW_USER, user);
 
-      return redirect("/login", {
+      return redirect((formObject["redirectTo"] as string) ?? "/login", {
         headers: {
           "Set-Cookie": await commitAuthSession(session),
         },
@@ -139,7 +139,12 @@ export default function LoginRoute() {
                 name="email"
                 id="email"
                 placeholder="Email"
-                defaultValue={actionData?.fields?.email}
+                readOnly={Boolean(searchParams.get("prefill[email]"))}
+                defaultValue={
+                  actionData?.fields?.email ??
+                  searchParams.get("prefill[email]") ??
+                  undefined
+                }
                 aria-invalid={Boolean(actionData?.fieldErrors?.email)}
                 aria-errormessage={actionData?.fieldErrors?.email?.join(", ")}
               />
