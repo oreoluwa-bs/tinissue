@@ -35,7 +35,7 @@ import {
   PointerSensor,
   useSensor,
 } from "@dnd-kit/core";
-import { cn } from "~/lib/utils";
+import { blockPropagation, cn } from "~/lib/utils";
 import {
   APIError,
   InternalServerError,
@@ -402,24 +402,6 @@ function Board({
       </div>
     </div>
   );
-}
-
-function blockPropagation(e: React.MouseEvent<HTMLElement, MouseEvent>) {
-  let clickedElement = e.target as HTMLElement | null;
-
-  while (clickedElement) {
-    if (clickedElement.getAttribute("data-stop-propagation")) {
-      // The clicked element or one of its parents has the stop-prop data attribute.
-      // console.log("stopped");
-      e.preventDefault(); // Prevent anchor navigation
-      e.stopPropagation(); // Stop event propagation
-    }
-
-    if (e.currentTarget === clickedElement) {
-      clickedElement = null;
-    }
-    clickedElement = clickedElement?.parentElement ?? null;
-  }
 }
 
 function DraggableCard({

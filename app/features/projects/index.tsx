@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, or, sql } from "drizzle-orm";
+import { and, eq, isNotNull, not, or, sql } from "drizzle-orm";
 import { db } from "~/db/db.server";
 import { projectMembers, projects } from "~/db/schema/projects";
 import { users } from "~/db/schema/users";
@@ -14,6 +14,7 @@ import { removeEmptyFields } from "~/lib/utils";
 import { defineAbilityFor } from "./permissions";
 import { defineAbilityFor as defineTeamAbilityFor } from "../teams/permissions";
 import { Unauthorised } from "~/lib/errors";
+import { projectMilestones } from "~/db/schema";
 
 export async function createProject(data: ICreateProject, creatorId: number) {
   const projectData = createProjectSchema.parse(data);
@@ -165,4 +166,49 @@ export async function getProjectMember(projectId: number, userId: number) {
         ),
       )
   )[0];
+}
+
+/**
+ * Analytics
+ */
+
+export async function projectProgressSegementation(projectId: number) {
+  const distinctMilestoneStatusCount = await db
+    .select({
+      count: sql<number>`count(*)`,
+      status: projectMilestones.status,
+    })
+    .from(projectMilestones)
+    .where(
+      and(
+        eq(projectMilestones.projectId, projectId),
+        not(eq(projectMilestones.status, "CANCELLED")),
+      ),
+    )
+    .groupBy(projectMilestones.status);
+
+  const milestoneCount = distinctMilestoneStatusCount.reduce((prev, curr) => {
+    return prev + curr.count;
+  }, 0);
+
+  return {
+    total: milestoneCount,
+    segments: distinctMilestoneStatusCount,
+  };
+}
+
+export async function projectDoneProgressInPercentage(projectId: number) {
+  const { segments, total } = await projectProgressSegementation(projectId);
+
+  const doneSegment = segments.find((i) => i.status === "DONE") ?? {
+    count: 0,
+    status: "DONE",
+  };
+
+  const percentage = (doneSegment.count / total) * 100;
+
+  return {
+    total,
+    percentage,
+  };
 }

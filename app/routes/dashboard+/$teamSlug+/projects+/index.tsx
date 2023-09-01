@@ -191,7 +191,6 @@ export default function Index() {
                       ? new Date(project.updatedAt)
                       : null,
                   }}
-                  progress={project.progress.percentage ?? 0}
                   teamSlug={params.teamSlug!}
                 />
               </Link>
