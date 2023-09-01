@@ -30,6 +30,7 @@ import { getUserTeams } from "~/features/teams";
 import { CreateProjectForm } from "./components/create-project-form";
 import { ProjectCard } from "./components/project-card";
 import { Input } from "~/components/ui/input";
+import { blockPropagation } from "~/lib/utils";
 
 export async function action({ request }: ActionArgs) {
   const userId = await requireUserId(request);
@@ -177,6 +178,9 @@ export default function Index() {
               <Link
                 key={project.id}
                 to={`/dashboard/${params.teamSlug}/projects/${project.slug}`}
+                onClick={(e) => {
+                  blockPropagation(e);
+                }}
               >
                 <ProjectCard
                   key={project.id}
@@ -187,6 +191,8 @@ export default function Index() {
                       ? new Date(project.updatedAt)
                       : null,
                   }}
+                  progress={project.progress.percentage ?? 0}
+                  teamSlug={params.teamSlug!}
                 />
               </Link>
             );

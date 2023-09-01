@@ -59,3 +59,21 @@ const formatURLSearchParams = (data: Record<string, any>) => {
 
   return new URLSearchParams(modifiedData);
 };
+
+export function blockPropagation(e: React.MouseEvent<HTMLElement, MouseEvent>) {
+  let clickedElement = e.target as HTMLElement | null;
+
+  while (clickedElement) {
+    if (clickedElement.getAttribute("data-stop-propagation")) {
+      // The clicked element or one of its parents has the stop-prop data attribute.
+      // console.log("stopped");
+      e.preventDefault(); // Prevent anchor navigation
+      e.stopPropagation(); // Stop event propagation
+    }
+
+    if (e.currentTarget === clickedElement) {
+      clickedElement = null;
+    }
+    clickedElement = clickedElement?.parentElement ?? null;
+  }
+}
