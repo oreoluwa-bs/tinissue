@@ -1,9 +1,9 @@
 // Sidebar with links to the differentt settings
 
-import { Link, NavLink, Outlet, useLocation } from "@remix-run/react";
-import { ChevronLeftIcon, MenuIcon } from "lucide-react";
+import { NavLink, Outlet, useLocation } from "@remix-run/react";
+import { MenuIcon } from "lucide-react";
 import { useState } from "react";
-import { Button, buttonVariants } from "~/components/ui/button";
+import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
 
 export default function SettingsLayout() {
@@ -90,7 +90,7 @@ function Sidebar({
 }) {
   return (
     <div>
-      <Link
+      {/* <Link
         to={basePath.split("/settings")[0]}
         className={buttonVariants({
           variant: "link",
@@ -98,7 +98,7 @@ function Sidebar({
         })}
       >
         <ChevronLeftIcon /> Back
-      </Link>
+      </Link> */}
 
       <div className="flex flex-col items-center gap-2 py-4">
         {routes.map((route) => {

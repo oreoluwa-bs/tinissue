@@ -11,7 +11,7 @@ import { editProject, getProject, deleteProject } from "~/features/projects";
 import { getProjectMilestones } from "~/features/projects/milestones";
 import { statusValues } from "~/features/projects/milestones/shared";
 import { MilestoneKanbanCard } from "./components/milestone-card";
-import { Button, buttonVariants } from "~/components/ui/button";
+import { Button } from "~/components/ui/button";
 import { PlusCircleIcon } from "lucide-react";
 import { CreateMilestoneForm } from "./components/create-milestone-form";
 import { useEffect, useId, useState } from "react";
@@ -160,16 +160,16 @@ export default function ProjectRoute() {
 
   return (
     <main className="py-6">
-      <div className="mb-5 flex items-center justify-between">
+      {/* <div className="mb-5 flex items-center justify-between">
         <h2 className="">{loaderData.project.project.name}</h2>
         <Link
           to={`/dashboard/${params.teamSlug}/projects/${params.projectSlug}/settings`}
           className={buttonVariants({ variant: "outline" })}
+          // {/* <PlusCircleIcon className="mr-2 h-5 w-5" /> *
         >
-          {/* <PlusCircleIcon className="mr-2 h-5 w-5" /> */}
           Settings
         </Link>
-      </div>
+      </div> */}
 
       <section>
         <DndContext

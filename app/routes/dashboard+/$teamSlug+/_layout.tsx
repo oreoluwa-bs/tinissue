@@ -1,5 +1,11 @@
 import { json, redirect, type LoaderArgs } from "@remix-run/node";
-import { NavLink, Outlet, useFetcher, useLoaderData } from "@remix-run/react";
+import {
+  NavLink,
+  Outlet,
+  useFetcher,
+  useLoaderData,
+  useMatches,
+} from "@remix-run/react";
 import {
   ChevronsUpDown,
   FolderKanban,
@@ -142,9 +148,20 @@ interface NavbarProps {
 
 function Navbar({ user, teams, currentTeam, prefs }: NavbarProps) {
   const fetcher = useFetcher();
+
+  const matches = useMatches();
+  const mainNavSettings = matches.find(
+    (match) => "mainNav" in (match?.handle ?? {}),
+  );
+
   // const avatarColor = generateAvatarGradient(user.firstName!, user.lastName!);
   return (
-    <header className="border-border-300 sticky top-0 z-20 border-b bg-background px-6 py-2">
+    <header
+      className={cn(
+        "border-border-300 sticky top-0 z-20 border-b bg-background px-6 py-2",
+        mainNavSettings?.handle?.mainNav?.hidden && "border-transparent",
+      )}
+    >
       <div className="flex  items-center justify-between">
         <div className="inline-flex items-center gap-5">
           <img src="/favicon.ico" alt="logo" className="w-8" />
@@ -225,35 +242,37 @@ function Navbar({ user, teams, currentTeam, prefs }: NavbarProps) {
           </DropdownMenu>
         </div>
       </div>
-      <div className="-mx-3 flex items-center justify-between py-1">
-        <div className="inline-flex items-center">
-          {routes.map((route) => {
-            const url =
-              typeof route.url === "function"
-                ? route.url(currentTeam.slug!)
-                : route.url;
+      {!mainNavSettings?.handle?.mainNav?.hidden ? (
+        <div className="-mx-3 flex items-center justify-between py-1">
+          <div className="inline-flex items-center">
+            {routes.map((route) => {
+              const url =
+                typeof route.url === "function"
+                  ? route.url(currentTeam.slug!)
+                  : route.url;
 
-            if (route?.hidden?.({ teamType: currentTeam.type })) return null;
+              if (route?.hidden?.({ teamType: currentTeam.type })) return null;
 
-            return (
-              <NavLink
-                key={route.id}
-                to={url}
-                className={({ isActive }) =>
-                  cn(
-                    "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-3 py-1 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
-                    isActive && "bg-accent/50",
-                  )
-                }
-                end={route.isEnd}
-              >
-                <route.icon strokeWidth={1.5} />
-                <span className="ml-2">{route.label}</span>
-              </NavLink>
-            );
-          })}
+              return (
+                <NavLink
+                  key={route.id}
+                  to={url}
+                  className={({ isActive }) =>
+                    cn(
+                      "group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-3 py-1 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50",
+                      isActive && "bg-accent/50",
+                    )
+                  }
+                  end={route.isEnd}
+                >
+                  <route.icon strokeWidth={1.5} />
+                  <span className="ml-2">{route.label}</span>
+                </NavLink>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      ) : null}
     </header>
   );
 }
