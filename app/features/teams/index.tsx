@@ -4,7 +4,7 @@ import { db } from "~/db/db.server";
 import { users } from "~/db/schema";
 import { teamInvites, teamMembers, teams } from "~/db/schema/teams";
 import { env } from "~/env";
-import { BadRequest, Unauthorised } from "~/lib/errors";
+import { BadRequest, NotFound, Unauthorised } from "~/lib/errors";
 import { generateAvatarThumbnail, removeEmptyFields } from "~/lib/utils";
 import { getUserByEmail } from "../user";
 import { userSelect } from "../user/utils";
@@ -16,11 +16,13 @@ import {
   editTeamMemberSchema,
   editTeamSchema,
   inviteToTeamSchema,
+  revokeInviteToTeamSchema,
   type ICreateTeam,
   type IDeleteTeamMember,
   type IEditTeam,
   type IEditTeamMember,
   type IInviteToTeam,
+  type IRevokeInviteToTeam,
 } from "./shared";
 
 export function slugifyAndAddRandomSuffix(
@@ -156,7 +158,23 @@ export async function getTeamMembers(
 
   // const hasAccess = membersList.filter((o) => o.team_members.userId === userId);
 
-  return membersList;
+  const invites = await getTeamInvites(teamId, query);
+
+  const membersAndInvitesList: {
+    team_members: (typeof membersList)[0]["team_members"] | null;
+    user: (typeof membersList)[0]["user"] | null;
+    team_invites: (typeof invites)[0] | null;
+  }[] = [...membersList.map((i) => ({ ...i, team_invites: null }))];
+
+  invites.forEach((invite) => {
+    membersAndInvitesList.push({
+      team_members: null,
+      user: null,
+      team_invites: invite,
+    });
+  });
+
+  return membersAndInvitesList;
 }
 
 export async function getTeamMember(teamId: number, userId: number) {
@@ -260,12 +278,50 @@ export async function deleteTeam(teamId: number, userId: number) {
 /**
  * Team Invitations
  */
+async function getTeamInvites(teamId: number, query?: string) {
+  const existingInvites = await db
+    .select()
+    .from(teamInvites)
+    .where(
+      and(
+        eq(teamInvites.teamId, teamId),
+        eq(teamInvites.accepted, false),
+        (query?.trim().length ?? 0) > 0
+          ? sql`${teamInvites.email} LIKE ${"%" + query + "%"}`
+          : isNotNull(teamInvites.id),
+      ),
+    );
+
+  return existingInvites;
+}
+
+export async function getTeamInvite(teamId: number, email: string) {
+  const existingInvite = (
+    await db
+      .select()
+      .from(teamInvites)
+      .where(
+        and(
+          eq(teamInvites.teamId, teamId),
+          eq(teamInvites.email, email),
+          sql`DATEDIFF(NOW(), ${teamInvites.createdAt}) < ${INVITE_WINDOW_IN_DAYS}`,
+        ),
+      )
+  )[0];
+
+  return existingInvite;
+}
+
+const INVITE_WINDOW_IN_DAYS = 7;
+
 export async function inviteToTeam(data: IInviteToTeam, userId: number) {
   const teamInviteData = inviteToTeamSchema.parse(data);
 
-  const teamMembers = await getTeamMembers(teamInviteData.teamId, userId);
+  const teamMembers = (
+    await getTeamMembers(teamInviteData.teamId, userId)
+  ).filter((i) => Boolean(i.team_members));
 
-  const teamMember = teamMembers.find((i) => i.team_members.userId === userId);
+  const teamMember = teamMembers.find((i) => i.team_members!.userId === userId);
 
   if (!teamMember || !teamMember.team_members) {
     throw new Unauthorised(
@@ -280,8 +336,6 @@ export async function inviteToTeam(data: IInviteToTeam, userId: number) {
       "You do not have permission to invite a user to this team",
     );
   }
-
-  const INVITE_WINDOW_IN_DAYS = 7;
 
   const existingInvite = await db
     .select()
@@ -299,7 +353,10 @@ export async function inviteToTeam(data: IInviteToTeam, userId: number) {
    * - existing invite expiry
    */
 
-  if (existingInvite.length > 0) {
+  if (
+    existingInvite.length > 0 ||
+    teamMembers.find((i) => i.user?.email === teamInviteData.email)?.user
+  ) {
     throw new BadRequest("You have already invited this user.");
     // return;
   }
@@ -315,18 +372,98 @@ export async function inviteToTeam(data: IInviteToTeam, userId: number) {
   const token = jwt.sign(
     { teamId: teamInviteData.teamId, email: teamInviteData.email },
     env.JWT_SECRET,
-    { expiresIn: "7d" },
+    { expiresIn: `${INVITE_WINDOW_IN_DAYS}d` },
   );
 
+  // TODO: Remove field from from table after expiry
   teamEvent.emit(TEAM_EVENTS.NEW_INVITE, {
     user: { email: teamInviteData.email },
     team: { name: team.name },
-    invitee: { name: teamMember.user.firstName },
+    invitee: { name: teamMember.user!.firstName },
     token: {
       token,
       expiryInDays: INVITE_WINDOW_IN_DAYS,
     },
   });
+}
+
+export async function revokeInviteToTeam(
+  data: IRevokeInviteToTeam,
+  userId: number,
+) {
+  const teamInviteData = revokeInviteToTeamSchema.parse(data);
+
+  const teamMembers = (
+    await getTeamMembers(teamInviteData.teamId, userId)
+  ).filter((i) => Boolean(i.team_members));
+
+  const teamMember = teamMembers.find((i) => i.team_members!.userId === userId);
+
+  if (!teamMember || !teamMember.team_members) {
+    throw new Unauthorised(
+      "You do not have permission to revoke this user's invite to this team",
+    );
+  }
+
+  const ability = defineAbilityFor(teamMember.team_members);
+
+  if (ability.cannot("edit", "Team")) {
+    throw new Unauthorised(
+      "You do not have permission to revoke this user's invite to this team",
+    );
+  }
+
+  await db
+    .delete(teamInvites)
+    .where(
+      and(
+        eq(teamInvites.id, teamInviteData.inviteId),
+        eq(teamInvites.teamId, teamInviteData.teamId),
+      ),
+    );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function revokeInviteToTeamThree(
+  inviteId: number,
+  userId: number,
+) {
+  const existingInvite = (
+    await db.select().from(teamInvites).where(eq(teamInvites.id, inviteId))
+  )[0];
+
+  if (!existingInvite) {
+    throw new NotFound();
+  }
+
+  const teamMembers = (
+    await getTeamMembers(existingInvite.teamId, userId)
+  ).filter((i) => Boolean(i.team_members));
+
+  const teamMember = teamMembers.find((i) => i.team_members!.userId === userId);
+
+  if (!teamMember || !teamMember.team_members) {
+    throw new Unauthorised(
+      "You do not have permission to revoke this user's invite to this team",
+    );
+  }
+
+  const ability = defineAbilityFor(teamMember.team_members);
+
+  if (ability.cannot("edit", "Team")) {
+    throw new Unauthorised(
+      "You do not have permission to revoke this user's invite to this team",
+    );
+  }
+
+  await db
+    .delete(teamInvites)
+    .where(
+      and(
+        eq(teamInvites.id, existingInvite.id),
+        eq(teamInvites.teamId, existingInvite.teamId),
+      ),
+    );
 }
 
 export async function acceptInviteToTeam(token: string) {

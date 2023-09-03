@@ -12,6 +12,7 @@ import { Button } from "~/components/ui/button";
 import {
   acceptInviteToTeam,
   getTeam,
+  getTeamInvite,
   verifyInvitationToken,
 } from "~/features/teams";
 import { getUserByEmail } from "~/features/user";
@@ -20,6 +21,7 @@ import {
   BadRequest,
   InternalServerError,
   MethodNotSupported,
+  NotFound,
   Unauthorised,
 } from "~/lib/errors";
 
@@ -78,6 +80,12 @@ export async function loader({ params, request }: LoaderArgs) {
     throw new BadRequest(claims);
   }
   const team = await getTeam(claims["teamId"]);
+
+  const invite = await getTeamInvite(claims["teamId"], claims["email"]);
+
+  if (!invite) {
+    throw new NotFound("Invalid Token");
+  }
 
   //   const project = await getProject(claims['projectId']);
   const user = await getUserByEmail(claims["email"]);

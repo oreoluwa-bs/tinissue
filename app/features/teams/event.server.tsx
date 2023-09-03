@@ -22,7 +22,7 @@ teamEvent.on(
       expiryInDays: number;
     };
   }) => {
-    const inviteLink = `http://localhost:3000/dashboard/accept/invitation/${token.token}`;
+    const inviteLink = `http://localhost:3000/dashboard/invitation/${token.token}`;
     // send email
     console.log(
       `Hello, ${invitee.name} has invited you to join ${team.name}. This invitation would expire in ${token.expiryInDays} days.${inviteLink}.`,

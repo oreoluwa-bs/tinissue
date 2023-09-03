@@ -63,6 +63,7 @@ import {
   getTeam,
   getTeamMembers,
   inviteToTeam,
+  revokeInviteToTeam,
 } from "~/features/teams";
 import {
   APIError,
@@ -114,23 +115,42 @@ export async function action({ params, request }: ActionArgs) {
     }
 
     if (method === "DELETE") {
-      await deleteTeamMember(
-        {
-          id: team.id,
-          userId: Number(formObject["userId"]),
-          ...formObject,
-        },
-        userId,
-      );
+      if (formObject["__type"] === "revoke") {
+        await revokeInviteToTeam(
+          {
+            teamId: team.id,
+            inviteId: Number(formObject["inviteId"]),
+          },
+          userId,
+        );
 
-      return json(
-        {
-          fields: formObject,
-          fieldErrors: null,
-          formErrors: null,
-        },
-        { status: 201 },
-      );
+        return json(
+          {
+            fields: formObject,
+            fieldErrors: null,
+            formErrors: null,
+          },
+          { status: 200 },
+        );
+      } else {
+        await deleteTeamMember(
+          {
+            id: team.id,
+            userId: Number(formObject["userId"]),
+            ...formObject,
+          },
+          userId,
+        );
+
+        return json(
+          {
+            fields: formObject,
+            fieldErrors: null,
+            formErrors: null,
+          },
+          { status: 200 },
+        );
+      }
     }
 
     throw new MethodNotSupported();
@@ -189,16 +209,18 @@ const columns = [
   columnHelper.accessor("user.fullName", {
     header: "Member",
     cell(props) {
+      const inviteData = props.row.original.team_invites;
+
       return (
         <div className="flex items-center gap-3">
           <Avatar className="h-6 w-6 text-sm">
             <AvatarImage
-              src={props.row.original.user.profilePhoto ?? undefined}
-              alt={props.row.original.user.fullName}
+              src={props.row.original.user?.profilePhoto ?? undefined}
+              alt={props.row.original.user?.fullName}
             />
-            <AvatarFallback>{props.row.original.user.initials}</AvatarFallback>
+            <AvatarFallback>{props.row.original.user?.initials}</AvatarFallback>
           </Avatar>
-          <span>{props.getValue()}</span>
+          <span>{props.getValue() ?? inviteData?.email}</span>
         </div>
       );
     },
@@ -215,9 +237,10 @@ const columns = [
 
       const disabled =
         // @ts-ignore
-        (meta?.currentUser?.userId === props.row.original.team_members.userId &&
+        (meta?.currentUser?.userId ===
+          props.row.original.team_members?.userId &&
           isOwner) ||
-        (props.row.original.team_members.role === "OWNER" && !isOwner);
+        (props.row.original.team_members?.role === "OWNER" && !isOwner);
 
       return isAdmin ? (
         <SelectRole rows={props.row} disabled={disabled} isOwner={isOwner} />
@@ -270,13 +293,17 @@ function SelectRole({
     }
   }, [fetcher.data, fetcher.state, toast]);
 
+  if (!rows.original.team_members) {
+    return "Pending invite";
+  }
+
   return (
     <Select
       name="role"
       defaultValue={rows.original.team_members.role ?? "MEMBER"}
       onValueChange={(v) => {
         fetcher.submit(
-          { role: v, userId: rows.original.team_members.userId },
+          { role: v, userId: rows.original.team_members!.userId },
           { method: "PATCH" },
         );
       }}
@@ -313,9 +340,9 @@ function RowActions({
   //  const isAdmin = meta?.isAdmin;
   const isOwner = meta?.isOwner;
   const deleteDisabled =
-    (meta?.currentUser?.userId === row.original.team_members.userId &&
+    (meta?.currentUser?.userId === row.original.team_members?.userId &&
       isOwner) ||
-    row.original.team_members.role === "OWNER";
+    row.original.team_members?.role === "OWNER";
 
   useEffect(() => {
     if (fetcher.data && fetcher.state === "idle") {
@@ -340,48 +367,96 @@ function RowActions({
         <MoreHorizontalIcon className="h-4 w-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-              }}
-              className="text-destructive focus:bg-destructive"
-              disabled={deleteDisabled}
-            >
-              Remove
-            </DropdownMenuItem>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This would remove {row.original.user.fullName} from this team
-                and prevent them from accessing any projects they are members
-                of.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-
-              <AlertDialogAction
-                type="submit"
-                // disabled={fetcher.state === "submitting"}
-                className={buttonVariants({ variant: "destructive" })}
-                onClick={(e) => {
-                  // e.preventDefault();
-                  fetcher.submit(
-                    { userId: row.original.team_members.userId },
-                    { method: "DELETE" },
-                  );
-                  setIsDropdownOpen(false);
+        {!row.original.team_invites ? (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
                 }}
+                className="text-destructive focus:bg-destructive"
+                disabled={deleteDisabled}
               >
                 Remove
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </DropdownMenuItem>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This would remove {row.original.user?.fullName} from this team
+                  and prevent them from accessing any projects they are members
+                  of.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+                <AlertDialogAction
+                  type="submit"
+                  // disabled={fetcher.state === "submitting"}
+                  className={buttonVariants({ variant: "destructive" })}
+                  onClick={(e) => {
+                    // e.preventDefault();
+                    fetcher.submit(
+                      { userId: row.original.team_members!.userId },
+                      { method: "DELETE" },
+                    );
+                    setIsDropdownOpen(false);
+                  }}
+                >
+                  Remove
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        ) : (
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                }}
+                className="text-destructive focus:bg-destructive"
+                disabled={deleteDisabled}
+              >
+                Revoke
+              </DropdownMenuItem>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This would remove {row.original.user?.fullName} from this team
+                  and prevent them from accessing any projects they are members
+                  of.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+
+                <AlertDialogAction
+                  type="submit"
+                  // disabled={fetcher.state === "submitting"}
+                  className={buttonVariants({ variant: "destructive" })}
+                  onClick={(e) => {
+                    // e.preventDefault();
+                    fetcher.submit(
+                      {
+                        __type: "revoke",
+                        inviteId: row.original.team_invites!.id,
+                      },
+                      { method: "DELETE" },
+                    );
+                    setIsDropdownOpen(false);
+                  }}
+                >
+                  Revoke
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -397,12 +472,12 @@ export default function MembersRoute() {
   const [searchParams, setSearchParams] = useSearchParams();
   // const fetcher = useFetcher();
 
-  const currentMember = loaderData.teamMembers.find(
-    (i) => i.team_members.userId === loaderData.userId,
+  const currentMember = loaderData.teamMembers?.find(
+    (i) => i.team_members?.userId === loaderData.userId,
   );
 
-  const isOwner = currentMember?.team_members.role === "OWNER";
-  const isAdmin = isOwner || currentMember?.team_members.role === "ADMIN";
+  const isOwner = currentMember?.team_members?.role === "OWNER";
+  const isAdmin = isOwner || currentMember?.team_members?.role === "ADMIN";
 
   const isSearching =
     navigation.state !== "idle" &&

@@ -184,3 +184,53 @@ export const inviteToTeamSchema = z.object({
   email: z.string({ required_error: "Email is required" }).email(),
 });
 export type IInviteToTeam = z.infer<typeof inviteToTeamSchema>;
+
+export const revokeInviteToTeamSchema = z.object({
+  teamId: z
+    .union([z.number(), z.string()], {
+      // invalid_type_error: "Invalid team",
+      // required_error: "Team is required",
+      errorMap: (issue, ctx) => {
+        if (issue.code === z.ZodIssueCode.invalid_union) {
+          return { message: "Invalid team" };
+        }
+        return { message: ctx.defaultError };
+      },
+    })
+    .transform((v, ctx) => {
+      const parsed = Number(v);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid team",
+        });
+
+        return z.NEVER;
+      }
+      return parsed;
+    }),
+  inviteId: z
+    .union([z.number(), z.string()], {
+      // invalid_type_error: "Invalid team",
+      // required_error: "Team is required",
+      errorMap: (issue, ctx) => {
+        if (issue.code === z.ZodIssueCode.invalid_union) {
+          return { message: "Invalid invite" };
+        }
+        return { message: ctx.defaultError };
+      },
+    })
+    .transform((v, ctx) => {
+      const parsed = Number(v);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid invite",
+        });
+
+        return z.NEVER;
+      }
+      return parsed;
+    }),
+});
+export type IRevokeInviteToTeam = z.infer<typeof revokeInviteToTeamSchema>;
