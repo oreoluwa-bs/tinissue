@@ -1,25 +1,33 @@
-import { json, type ActionArgs, redirect } from "@remix-run/node";
+import { json, redirect, type ActionArgs } from "@remix-run/node";
 import { Form, Link, useActionData, useSearchParams } from "@remix-run/react";
 import { AlertCircle } from "lucide-react";
-import {
-  commitAuthSession,
-  credentialsSignUp,
-  getAuthSession,
-} from "~/features/auth";
-import { credentialsSignupSchema } from "~/features/auth/shared";
+import { ZodError } from "zod";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Button, buttonVariants } from "~/components/ui/button";
 import { FormError } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
+import {
+  commitAuthSession,
+  credentialsSignUp,
+  getAuthSession,
+} from "~/features/auth";
 import { AUTH_EVENTS, authEvent } from "~/features/auth/event.server";
+import { credentialsSignupSchema } from "~/features/auth/shared";
+import {
+  APIError,
+  InternalServerError,
+  MethodNotSupported,
+} from "~/lib/errors";
 
 export async function action({ request }: ActionArgs) {
   const formData = await request.formData();
   const formObject = Object.fromEntries(formData);
 
-  switch (request.method) {
-    case "POST":
+  const method = request.method;
+
+  try {
+    if (method === "POST") {
       const credentials = credentialsSignupSchema.safeParse(formObject);
 
       if (!credentials.success) {
@@ -54,21 +62,41 @@ export async function action({ request }: ActionArgs) {
       );
       authEvent.emit(AUTH_EVENTS.NEW_USER, user);
 
-      return redirect((formObject["redirectTo"] as string) ?? "/login", {
-        headers: {
-          "Set-Cookie": await commitAuthSession(session),
+      return redirect(
+        (formObject["redirectTo"] as string)?.trim()?.length > 0
+          ? (formObject["redirectTo"] as string)
+          : "/login",
+        {
+          headers: {
+            "Set-Cookie": await commitAuthSession(session),
+          },
         },
-      });
+      );
+    }
 
-    default:
+    throw new MethodNotSupported();
+  } catch (err) {
+    if (err instanceof ZodError) {
       return json(
         {
           fields: formObject,
-          fieldErrors: null,
-          formErrors: "Method not found",
+          fieldErrors: err.flatten().fieldErrors,
+          formErrors: err.flatten().formErrors.join(", "),
         },
         { status: 400 },
       );
+    }
+
+    let error = err instanceof APIError ? err : new InternalServerError();
+
+    return json(
+      {
+        fields: formObject,
+        fieldErrors: null,
+        formErrors: error.message,
+      },
+      { status: error.statusCode },
+    );
   }
 }
 
