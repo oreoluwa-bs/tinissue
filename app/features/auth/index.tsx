@@ -61,6 +61,7 @@ export async function credentialsSignUp(credentials: ICredentialsSignUp) {
 
   const defaultProfile = generateAvatarThumbnail(
     (credentials.firstName + " " + credentials.lastName)
+      .trim()
       .split(" ")
       .map((i) => i[0].toUpperCase()) // Get initials
       .join(""),
