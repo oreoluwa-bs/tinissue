@@ -93,6 +93,10 @@ export async function action({ params, request }: ActionArgs) {
       >[0];
 
       await inviteToTeam(credentials, userId);
+      return json(
+        { fields: formObject, fieldErrors: null, formErrors: null },
+        { status: 201 },
+      );
     }
 
     if (method === "PATCH") {
