@@ -4,6 +4,7 @@ import {
   type ActionArgs,
   type LoaderArgs,
   redirect,
+  type LinksFunction,
 } from "@remix-run/node";
 import { Link, useFetcher, useLoaderData, useParams } from "@remix-run/react";
 import { requireUserId } from "~/features/auth";
@@ -41,6 +42,10 @@ import {
   InternalServerError,
   MethodNotSupported,
 } from "~/lib/errors";
+
+import { links as editorLinks } from "./milestones+/components/rich-text-editor";
+
+export const links: LinksFunction = () => [...editorLinks()];
 
 export async function action({ params, request }: ActionArgs) {
   const userId = await requireUserId(request);

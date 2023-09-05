@@ -24,7 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 
-import { cn } from "~/lib/utils";
+import { cn, convertToPlain } from "~/lib/utils";
 import { useFetcher } from "@remix-run/react";
 import { useToast } from "~/components/ui/use-toast";
 import {
@@ -117,7 +117,9 @@ export function MilestoneKanbanCard({
           meta={meta}
         />
       </div>
-      <p className="text-xs text-gray-400">{milestone.description}</p>
+      <p className="line-clamp-2 text-xs text-gray-400">
+        {convertToPlain(milestone.description ?? "")}
+      </p>
 
       <Popover open={openAssignees} onOpenChange={setOpenAssignees}>
         <PopoverTrigger asChild>

@@ -26,9 +26,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Textarea } from "~/components/ui/textarea";
 import { statusValues } from "~/features/projects/milestones/shared";
 import { cn } from "~/lib/utils";
+import { RichTextEditor } from "../milestones+/components/rich-text-editor";
 
 interface CreateMilestoneFormProps {
   Form: typeof Form;
@@ -58,6 +58,10 @@ export function CreateMilestoneForm({
 }: CreateMilestoneFormProps) {
   const ref = useRef<HTMLFormElement | null>(null);
   const [open, setOpen] = useState(false);
+  const [description, setDescription] = useState<string>(
+    data?.fields?.description,
+  );
+
   const [assignedMembers, setAssignedMembers] = useState<number[]>(
     data?.fields?.assigneesId ?? [],
   );
@@ -147,13 +151,24 @@ export function CreateMilestoneForm({
             <Label htmlFor="description" className="mb-2">
               Description
             </Label>
-            <Textarea
+            <input
               name="description"
               id="description"
               placeholder="What do you want to achieve?"
-              defaultValue={data?.fields?.description}
+              defaultValue={description}
               aria-invalid={Boolean(data?.fieldErrors?.description)}
               aria-errormessage={data?.fieldErrors?.description?.join(", ")}
+              hidden
+            />
+            <RichTextEditor
+              className={cn(
+                "min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              )}
+              placeholder="What do you want to achieve?"
+              defaultContent={description}
+              onChange={({ editor }) => {
+                setDescription(editor.getHTML());
+              }}
             />
             <FormError>{data?.fieldErrors?.description}</FormError>
           </div>

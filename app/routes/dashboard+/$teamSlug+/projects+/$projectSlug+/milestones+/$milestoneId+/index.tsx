@@ -3,11 +3,12 @@ import {
   type ActionArgs,
   type LoaderArgs,
   redirect,
+  type LinksFunction,
 } from "@remix-run/node";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import { useEffect } from "react";
 import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
+// import { Textarea } from "~/components/ui/textarea";
 import { useToast } from "~/components/ui/use-toast";
 import { requireUserId } from "~/features/auth";
 import { getProject } from "~/features/projects";
@@ -25,6 +26,13 @@ import {
   InternalServerError,
   MethodNotSupported,
 } from "~/lib/errors";
+import {
+  RichTextEditor,
+  links as editorLinks,
+} from "../components/rich-text-editor";
+import { cn } from "~/lib/utils";
+
+export const links: LinksFunction = () => [...editorLinks()];
 
 export async function action({ params, request }: ActionArgs) {
   const userId = await requireUserId(request);
@@ -217,10 +225,29 @@ function DisplayMilestone({
             />
           </div>
           <div>
-            <Textarea
+            {/* <Textarea
               name="description"
               className="border-0"
-              defaultValue={milestone.milestone.description ?? ""}
+              // defaultValue={milestone.milestone.description ?? ""}
+              defaultValue={description ?? ""}
+            /> */}
+
+            <RichTextEditor
+              className={cn(
+                "min-h-[80px] w-full rounded-md border-0 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+              )}
+              placeholder="What's this milestone about?"
+              defaultContent={milestone.milestone.description ?? undefined}
+              onBlur={({ editor }) => {
+                fetcher.submit(
+                  {
+                    name: milestone.milestone.name,
+                    description: editor.getHTML(),
+                    id: milestone.milestone.id,
+                  },
+                  { method: "PATCH" },
+                );
+              }}
             />
           </div>
         </div>
