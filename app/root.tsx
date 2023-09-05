@@ -15,7 +15,7 @@ import {
 import styles from "./globals.css";
 import { Toaster } from "./components/ui/toaster";
 import { prefs } from "./features/preferences";
-import { useLayoutEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 export const meta: V2_MetaFunction = () => {
   return [
@@ -40,12 +40,18 @@ export default function App() {
   const [systemTheme, setSystemTheme] = useState<string>("dark");
   const { theme } = useLoaderData<typeof loader>();
 
-  useLayoutEffect(() => {
-    setSystemTheme(
-      window.matchMedia("(prefers-color-scheme: dark)").matches
-        ? "dark"
-        : "light",
-    );
+  useEffect(() => {
+    const mql = window.matchMedia("(prefers-color-scheme: dark)");
+
+    function toggleSystemTheme(e: MediaQueryListEvent) {
+      setSystemTheme(e.matches ? "dark" : "light");
+    }
+
+    mql.addEventListener("change", toggleSystemTheme);
+
+    return () => {
+      mql.removeEventListener("change", toggleSystemTheme);
+    };
   }, []);
 
   return (
