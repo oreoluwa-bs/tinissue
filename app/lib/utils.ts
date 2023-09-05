@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import uniqolor from "uniqolor";
+import { convert } from "html-to-text";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -76,4 +77,8 @@ export function blockPropagation(e: React.MouseEvent<HTMLElement, MouseEvent>) {
     }
     clickedElement = clickedElement?.parentElement ?? null;
   }
+}
+
+export function convertToPlain(html: string) {
+  return convert(html, { wordwrap: 130 });
 }
