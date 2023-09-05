@@ -1,0 +1,13 @@
+.tiptap-editor {
+  width: 100%;
+  height: 100%;
+  /* min-height: inherit; */
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: hsl(var(--muted-foreground));
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
