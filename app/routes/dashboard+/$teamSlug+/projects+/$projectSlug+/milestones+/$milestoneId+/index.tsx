@@ -33,10 +33,17 @@ import {
 } from "../components/rich-text-editor";
 import { cn } from "~/lib/utils";
 import format from "date-fns/format";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, CheckIcon, UserCircle } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Calendar } from "~/components/ui/calendar";
 import { ZodError } from "zod";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "~/components/ui/command";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 export const links: LinksFunction = () => [...editorLinks()];
 
@@ -131,6 +138,7 @@ export async function loader({ params, request }: LoaderArgs) {
     project,
     milestone,
     userId,
+    teamSlug: params["teamSlug"],
   });
 }
 
@@ -148,6 +156,9 @@ export default function MilestoneRoute() {
       <DisplayMilestone
         milestone={loaderData.milestone}
         fetcher={milestoneFetcher}
+        projectMembers={loaderData.project.members}
+        teamSlug={loaderData.teamSlug!}
+        projectSlug={loaderData.project.project.slug!}
       />
     </main>
   );
@@ -156,13 +167,38 @@ export default function MilestoneRoute() {
 function DisplayMilestone({
   milestone,
   fetcher,
+  projectMembers,
+  teamSlug,
+  projectSlug,
 }: {
   milestone: Awaited<
     ReturnType<typeof useLoaderData<typeof loader>>
   >["milestone"];
+  projectMembers: Awaited<
+    ReturnType<typeof useLoaderData<typeof loader>>
+  >["project"]["members"];
 
   fetcher: ReturnType<typeof useFetcher<any>>;
+  teamSlug: string;
+  projectSlug: string;
 }) {
+  const defaultDate = isNaN(
+    Date.parse(fetcher?.data?.dueAt ?? milestone.milestone?.dueAt),
+  )
+    ? undefined
+    : new Date(fetcher?.data?.dueAt ?? milestone.milestone?.dueAt);
+  const [dueAt, setDueAt] = useState<Date | undefined>(defaultDate);
+  const [dueAtTime, setDueAtTime] = useState<string>(
+    defaultDate
+      ? `${defaultDate.getHours().toString().padStart(2, "0")}:${defaultDate
+          .getMinutes()
+          .toString()
+          .padStart(2, "0")}`
+      : "09:00",
+  );
+
+  const [openAssigneesPopover, setOpenAssigneesPopover] = useState(false);
+
   const { toast } = useToast();
 
   useEffect(() => {
@@ -185,29 +221,6 @@ function DisplayMilestone({
       }
     }
   }, [fetcher.data, fetcher.state, toast]);
-
-  const defaultDate = isNaN(
-    Date.parse(fetcher?.data?.dueAt ?? milestone.milestone?.dueAt),
-  )
-    ? undefined
-    : new Date(fetcher?.data?.dueAt ?? milestone.milestone?.dueAt);
-  const [dueAt, setDueAt] = useState<Date | undefined>(defaultDate);
-  const [dueAtTime, setDueAtTime] = useState<string>(
-    defaultDate
-      ? `${defaultDate.getHours().toString().padStart(2, "0")}:${defaultDate
-          .getMinutes()
-          .toString()
-          .padStart(2, "0")}`
-      : "09:00",
-  );
-
-  // useEffect(() => {
-  //   if (state === "idle" && data) {
-  //     if (!data.fieldErrors && !data.formErrors) {
-  //       ref.current?.reset();
-  //     }
-  //   }
-  // }, [data, state]);
 
   function handleDaySelect(date: Date | undefined) {
     if (!dueAtTime || !date) {
@@ -329,6 +342,123 @@ function DisplayMilestone({
                         />
                       </Label>
                     </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            <div className="flex flex-1 items-center  gap-2">
+              <Label htmlFor="assignees" className="mb-2">
+                Assignees
+              </Label>
+              <div>
+                <Popover
+                  open={openAssigneesPopover}
+                  onOpenChange={setOpenAssigneesPopover}
+                >
+                  <PopoverTrigger asChild>
+                    <Button
+                      className=""
+                      name="assignees"
+                      id="assignees"
+                      type="button"
+                      variant="ghost"
+                      role="combobox"
+                      aria-expanded={openAssigneesPopover}
+                    >
+                      {milestone?.assignees?.length > 0 ? (
+                        <div className="inline-flex -space-x-1">
+                          {milestone.assignees.slice(0, 4).map((value) => {
+                            const member = projectMembers.find(
+                              (framework) => framework.id === value?.id,
+                            );
+
+                            return (
+                              <Avatar
+                                key={member?.id}
+                                className="h-7 w-7 touch-none text-xs outline outline-foreground/10"
+                              >
+                                <AvatarImage
+                                  src={member?.profilePhoto ?? undefined}
+                                  alt={member?.fullName}
+                                />
+                                <AvatarFallback>
+                                  {member?.initials}
+                                </AvatarFallback>
+                              </Avatar>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <UserCircle
+                          className="h-6 w-6 opacity-25 group-hover:opacity-100"
+                          strokeWidth="1.5px"
+                        />
+                      )}
+                      {/* <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <Command>
+                      <CommandInput
+                        placeholder="Search Members..."
+                        className="h-9"
+                      />
+                      {/* <CommandEmpty>No framework found.</CommandEmpty> */}
+                      <CommandGroup>
+                        {projectMembers.map((member) => {
+                          const isSelected = milestone?.assignees
+                            .map((i) => i?.id)
+                            .includes(member.id);
+
+                          return (
+                            <CommandItem
+                              key={member.id}
+                              onSelect={() => {
+                                const milestoneId = milestone.milestone.id;
+
+                                if (isSelected) {
+                                  // onDeleteAssignee(milestone.id, member.id);
+                                  fetcher.submit(
+                                    {
+                                      milestoneId,
+                                      assigneeId: member.id,
+                                      errorAsToast: true,
+                                    },
+                                    {
+                                      method: "DELETE",
+                                      action: `/dashboard/${teamSlug}/projects/${projectSlug}/milestones/${milestoneId}/assignees`,
+                                    },
+                                  );
+                                  return;
+                                }
+
+                                fetcher.submit(
+                                  {
+                                    milestoneId,
+                                    "assigneesId[]": [member.id],
+                                    errorAsToast: true,
+                                  },
+                                  {
+                                    method: "POST",
+                                    action: `/dashboard/${teamSlug}/projects/${projectSlug}/milestones/${milestoneId}/assignees`,
+                                  },
+                                );
+                                return;
+                              }}
+                            >
+                              {member.fullName}
+                              <CheckIcon
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  isSelected ? "opacity-100" : "opacity-0",
+                                )}
+                              />
+                            </CommandItem>
+                          );
+                        })}
+                      </CommandGroup>
+                    </Command>
                   </PopoverContent>
                 </Popover>
               </div>
