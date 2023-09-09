@@ -68,8 +68,8 @@ export function CreateMilestoneForm({
     data?.fields?.assigneesId ?? [],
   );
 
-  const [date, setDate] = useState<Date>();
-  const [time, setTime] = useState<string>("09:00");
+  const [dueAt, setDueAt] = useState<Date>();
+  const [dueAtTime, setDueAtTime] = useState<string>("09:00");
 
   // useEffect(() => {
   //   if (state === "idle" && data) {
@@ -80,11 +80,13 @@ export function CreateMilestoneForm({
   // }, [data, state]);
 
   function handleDaySelect(date: Date | undefined) {
-    if (!time || !date) {
-      setDate(date);
+    if (!dueAtTime || !date) {
+      setDueAt(date);
       return;
     }
-    const [hours, minutes] = time.split(":").map((str) => parseInt(str, 10));
+    const [hours, minutes] = dueAtTime
+      .split(":")
+      .map((str) => parseInt(str, 10));
     const newDate = new Date(
       date.getFullYear(),
       date.getMonth(),
@@ -92,24 +94,24 @@ export function CreateMilestoneForm({
       hours,
       minutes,
     );
-    setDate(newDate);
+    setDueAt(newDate);
   }
   function handleTimeChange(e: React.ChangeEvent<HTMLInputElement>) {
     const time = e.target.value;
-    if (!date) {
-      setTime(time);
+    if (!dueAt) {
+      setDueAtTime(time);
       return;
     }
     const [hours, minutes] = time.split(":").map((str) => parseInt(str, 10));
     const newSelectedDate = new Date(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
+      dueAt.getFullYear(),
+      dueAt.getMonth(),
+      dueAt.getDate(),
       hours,
       minutes,
     );
-    setDate(newSelectedDate);
-    setTime(time);
+    setDueAt(newSelectedDate);
+    setDueAtTime(time);
   }
 
   return (
@@ -310,25 +312,29 @@ export function CreateMilestoneForm({
               <FormError>{data?.fieldErrors?.assigneesId}</FormError>
             </div>
             <div className="flex-1">
-              <Label className="mb-2" htmlFor="dueDate">
+              <Label className="mb-2" htmlFor="dueAt">
                 Due Date
               </Label>
-              <input name="dueDate" value={date?.toISOString()} hidden />
+              <input
+                name="dueAt"
+                value={dueAt?.toUTCString() ?? undefined}
+                hidden
+              />
               <div>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       type="button"
-                      id="dueDate"
+                      id="dueAt"
                       variant={"outline"}
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !date && "text-muted-foreground",
+                        !dueAt && "text-muted-foreground",
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? (
-                        format(date, "PPP 'at' p")
+                      {dueAt ? (
+                        format(dueAt, "PPP 'at' p")
                       ) : (
                         <span>Pick a date</span>
                       )}
@@ -338,7 +344,7 @@ export function CreateMilestoneForm({
                     <div className="flex items-start">
                       <Calendar
                         mode="single"
-                        selected={date}
+                        selected={dueAt}
                         onSelect={handleDaySelect}
                         initialFocus
                       />
@@ -346,7 +352,7 @@ export function CreateMilestoneForm({
                         <span className="mb-2 inline-block">Time</span>
                         <Input
                           type="time"
-                          defaultValue={time}
+                          defaultValue={dueAtTime}
                           onChange={handleTimeChange}
                         />
                       </Label>

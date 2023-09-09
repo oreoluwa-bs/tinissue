@@ -1,7 +1,7 @@
 import { json, type ActionArgs } from "@remix-run/node";
+import { ZodError } from "zod";
 import { requireUserId } from "~/features/auth";
 import { createMilestone } from "~/features/projects/milestones";
-import { createProjectMilestoneSchema } from "~/features/projects/milestones/shared";
 import {
   APIError,
   InternalServerError,
@@ -16,25 +16,14 @@ export async function action({ request }: ActionArgs) {
   const method = request.method;
   try {
     if (method === "POST") {
-      const credentials = createProjectMilestoneSchema.safeParse({
+      const credentials = {
         ...formObject,
         ...(formData.getAll("assigneesId[]").length > 0 && {
           assigneesId: formData.getAll("assigneesId[]"),
         }),
-      });
+      } as any;
 
-      if (!credentials.success) {
-        return json(
-          {
-            fields: formObject,
-            fieldErrors: credentials.error.flatten().fieldErrors,
-            formErrors: credentials.error.flatten().formErrors.join(", "),
-          },
-          { status: 400 },
-        );
-      }
-
-      await createMilestone(credentials.data, userId);
+      await createMilestone(credentials, userId);
 
       return json(
         {
@@ -48,6 +37,17 @@ export async function action({ request }: ActionArgs) {
 
     throw new MethodNotSupported();
   } catch (err) {
+    if (err instanceof ZodError) {
+      return json(
+        {
+          fields: formObject,
+          fieldErrors: err.flatten().fieldErrors,
+          formErrors: err.flatten().formErrors.join(", "),
+        },
+        { status: 400 },
+      );
+    }
+
     let error = err instanceof APIError ? err : new InternalServerError();
 
     return json(
