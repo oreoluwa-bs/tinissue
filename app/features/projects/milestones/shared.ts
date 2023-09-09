@@ -43,7 +43,7 @@ export const createProjectMilestoneSchema = z.object({
         return null;
       }
 
-      if (isNaN(Date.parse(v))) {
+      if (isNaN(new Date(v).getTime())) {
         ctx.addIssue({
           code: "custom",
           path: ["dueAt"],
@@ -97,7 +97,7 @@ export const editMilestoneSchema = z.object({
         return null;
       }
 
-      if (isNaN(Date.parse(v))) {
+      if (isNaN(new Date(v).getTime())) {
         ctx.addIssue({
           code: "custom",
           path: ["dueAt"],
