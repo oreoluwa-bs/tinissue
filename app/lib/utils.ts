@@ -24,7 +24,7 @@ export const removeEmptyFields = <T extends { [key: string]: any }>(
   const newObject = { ...data };
 
   Object.keys(newObject).forEach((key) => {
-    if (newObject[key] === "" || newObject[key] == null) {
+    if (newObject[key] === "" || newObject[key] === undefined) {
       delete newObject[key];
     }
   });
