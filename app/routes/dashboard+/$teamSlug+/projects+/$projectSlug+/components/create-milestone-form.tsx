@@ -1,5 +1,5 @@
 import type { Form } from "@remix-run/react";
-import { AlertCircle, CheckIcon } from "lucide-react";
+import { AlertCircle, CalendarIcon, CheckIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -29,6 +29,8 @@ import {
 import { statusValues } from "~/features/projects/milestones/shared";
 import { cn } from "~/lib/utils";
 import { RichTextEditor } from "../milestones+/components/rich-text-editor";
+import format from "date-fns/format";
+import { Calendar } from "~/components/ui/calendar";
 
 interface CreateMilestoneFormProps {
   Form: typeof Form;
@@ -66,6 +68,9 @@ export function CreateMilestoneForm({
     data?.fields?.assigneesId ?? [],
   );
 
+  const [date, setDate] = useState<Date>();
+  const [time, setTime] = useState<string>("09:00");
+
   // useEffect(() => {
   //   if (state === "idle" && data) {
   //     if (!data.fieldErrors && !data.formErrors) {
@@ -73,6 +78,39 @@ export function CreateMilestoneForm({
   //     }
   //   }
   // }, [data, state]);
+
+  function handleDaySelect(date: Date | undefined) {
+    if (!time || !date) {
+      setDate(date);
+      return;
+    }
+    const [hours, minutes] = time.split(":").map((str) => parseInt(str, 10));
+    const newDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      hours,
+      minutes,
+    );
+    setDate(newDate);
+  }
+  function handleTimeChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const time = e.target.value;
+    if (!date) {
+      setTime(time);
+      return;
+    }
+    const [hours, minutes] = time.split(":").map((str) => parseInt(str, 10));
+    const newSelectedDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      hours,
+      minutes,
+    );
+    setDate(newSelectedDate);
+    setTime(time);
+  }
 
   return (
     <>
@@ -173,99 +211,150 @@ export function CreateMilestoneForm({
             <FormError>{data?.fieldErrors?.description}</FormError>
           </div>
 
-          <div>
-            <Label htmlFor="assignees" className="mb-2">
-              Assignees
-            </Label>
-            {assignedMembers.map((member) => {
-              return (
-                <input
-                  key={member}
-                  name="assigneesId[]"
-                  className="w-5"
-                  defaultValue={member}
-                  hidden
-                />
-              );
-            })}
+          <div className="flex gap-4">
             <div>
-              <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    name="assignees"
-                    type="button"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={open}
-                  >
-                    {assignedMembers.length > 0
-                      ? assignedMembers.map((value) => {
-                          const member = members.find(
-                            (framework) => framework.id === value,
+              <Label htmlFor="assignees" className="mb-2">
+                Assignees
+              </Label>
+              {assignedMembers.map((member) => {
+                return (
+                  <input
+                    key={member}
+                    name="assigneesId[]"
+                    className="w-5"
+                    defaultValue={member}
+                    hidden
+                  />
+                );
+              })}
+              <div>
+                <Popover open={open} onOpenChange={setOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      name="assignees"
+                      id="assignees"
+                      type="button"
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={open}
+                    >
+                      {assignedMembers.length > 0
+                        ? assignedMembers.map((value) => {
+                            const member = members.find(
+                              (framework) => framework.id === value,
+                            );
+
+                            return (
+                              <Avatar
+                                key={member?.id}
+                                className="mr-2 h-6 w-6 text-xs"
+                              >
+                                <AvatarImage
+                                  src={member?.profilePhoto ?? undefined}
+                                  alt={member?.fullName}
+                                />
+                                <AvatarFallback>
+                                  {member?.initials}
+                                </AvatarFallback>
+                              </Avatar>
+                            );
+                          })
+                        : "Select Assignees"}
+                      {/* <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <Command>
+                      <CommandInput
+                        placeholder="Search Assignees..."
+                        className="h-9"
+                      />
+                      {/* <CommandEmpty>No framework found.</CommandEmpty> */}
+                      <CommandGroup>
+                        {members.map((member) => {
+                          const isSelected = assignedMembers.includes(
+                            member.id,
                           );
 
                           return (
-                            <Avatar
-                              key={member?.id}
-                              className="mr-2 h-6 w-6 text-xs"
+                            <CommandItem
+                              key={member.id}
+                              onSelect={() => {
+                                setAssignedMembers((prev) => {
+                                  const exists = prev.includes(member.id);
+
+                                  if (exists) {
+                                    return prev.filter((v) => v !== member.id);
+                                  }
+
+                                  return [...prev, member.id];
+                                });
+                                // setOpen(false)
+                              }}
                             >
-                              <AvatarImage
-                                src={member?.profilePhoto ?? undefined}
-                                alt={member?.fullName}
+                              {member.fullName}
+                              <CheckIcon
+                                className={cn(
+                                  "ml-auto h-4 w-4",
+                                  isSelected ? "opacity-100" : "opacity-0",
+                                )}
                               />
-                              <AvatarFallback>
-                                {member?.initials}
-                              </AvatarFallback>
-                            </Avatar>
+                            </CommandItem>
                           );
-                        })
-                      : "Select Assignees"}
-                    {/* <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" /> */}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent>
-                  <Command>
-                    <CommandInput
-                      placeholder="Search Assignees..."
-                      className="h-9"
-                    />
-                    {/* <CommandEmpty>No framework found.</CommandEmpty> */}
-                    <CommandGroup>
-                      {members.map((member) => {
-                        const isSelected = assignedMembers.includes(member.id);
-
-                        return (
-                          <CommandItem
-                            key={member.id}
-                            onSelect={() => {
-                              setAssignedMembers((prev) => {
-                                const exists = prev.includes(member.id);
-
-                                if (exists) {
-                                  return prev.filter((v) => v !== member.id);
-                                }
-
-                                return [...prev, member.id];
-                              });
-                              // setOpen(false)
-                            }}
-                          >
-                            {member.fullName}
-                            <CheckIcon
-                              className={cn(
-                                "ml-auto h-4 w-4",
-                                isSelected ? "opacity-100" : "opacity-0",
-                              )}
-                            />
-                          </CommandItem>
-                        );
-                      })}
-                    </CommandGroup>
-                  </Command>
-                </PopoverContent>
-              </Popover>
+                        })}
+                      </CommandGroup>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              <FormError>{data?.fieldErrors?.assigneesId}</FormError>
             </div>
-            <FormError>{data?.fieldErrors?.assigneesId}</FormError>
+            <div className="flex-1">
+              <Label className="mb-2" htmlFor="dueDate">
+                Due Date
+              </Label>
+              <input name="dueDate" value={date?.toISOString()} hidden />
+              <div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      id="dueDate"
+                      variant={"outline"}
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !date && "text-muted-foreground",
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? (
+                        format(date, "PPP 'at' p")
+                      ) : (
+                        <span>Pick a date</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <div className="flex items-start">
+                      <Calendar
+                        mode="single"
+                        selected={date}
+                        onSelect={handleDaySelect}
+                        initialFocus
+                      />
+                      <Label className="mb-2 px-3 py-3">
+                        <span className="mb-2 inline-block">Time</span>
+                        <Input
+                          type="time"
+                          defaultValue={time}
+                          onChange={handleTimeChange}
+                        />
+                      </Label>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
           </div>
 
           <div>
