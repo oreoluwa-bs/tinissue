@@ -1,12 +1,24 @@
 import {
   json,
-  type ActionArgs,
-  type LoaderArgs,
   redirect,
+  type ActionArgs,
   type LinksFunction,
+  type LoaderArgs,
 } from "@remix-run/node";
 import { useFetcher, useLoaderData } from "@remix-run/react";
+import format from "date-fns/format";
+import { CalendarIcon, CheckIcon, UserCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ZodError } from "zod";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Button } from "~/components/ui/button";
+import { Calendar } from "~/components/ui/calendar";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from "~/components/ui/command";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import {
@@ -14,6 +26,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { useToast } from "~/components/ui/use-toast";
 import { requireUserId } from "~/features/auth";
 import { getProject } from "~/features/projects";
@@ -22,28 +42,17 @@ import {
   editMilestone,
   getProjectMilestone,
 } from "~/features/projects/milestones";
+import { statusValues } from "~/features/projects/milestones/shared";
 import {
   APIError,
   InternalServerError,
   MethodNotSupported,
 } from "~/lib/errors";
+import { cn } from "~/lib/utils";
 import {
   RichTextEditor,
   links as editorLinks,
 } from "../components/rich-text-editor";
-import { cn } from "~/lib/utils";
-import format from "date-fns/format";
-import { CalendarIcon, CheckIcon, UserCircle } from "lucide-react";
-import { Button } from "~/components/ui/button";
-import { Calendar } from "~/components/ui/calendar";
-import { ZodError } from "zod";
-import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from "~/components/ui/command";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
 export const links: LinksFunction = () => [...editorLinks()];
 
@@ -164,13 +173,7 @@ export default function MilestoneRoute() {
   );
 }
 
-function DisplayMilestone({
-  milestone,
-  fetcher,
-  projectMembers,
-  teamSlug,
-  projectSlug,
-}: {
+interface DisplayMilestoneProps {
   milestone: Awaited<
     ReturnType<typeof useLoaderData<typeof loader>>
   >["milestone"];
@@ -181,7 +184,15 @@ function DisplayMilestone({
   fetcher: ReturnType<typeof useFetcher<any>>;
   teamSlug: string;
   projectSlug: string;
-}) {
+}
+
+function DisplayMilestone({
+  milestone,
+  fetcher,
+  projectMembers,
+  teamSlug,
+  projectSlug,
+}: DisplayMilestoneProps) {
   const defaultDate = isNaN(
     Date.parse(fetcher?.data?.dueAt ?? milestone.milestone?.dueAt),
   )
@@ -275,6 +286,9 @@ function DisplayMilestone({
     );
   }
 
+  // todo if projectmember is not owner | admin
+  const isFormDisabled = false;
+
   return (
     <div>
       <form>
@@ -285,10 +299,47 @@ function DisplayMilestone({
               name="name"
               defaultValue={milestone.milestone.name}
               onBlur={onBlur}
+              disabled={isFormDisabled}
             />
           </div>
 
           <div className="space-y-4 px-3">
+            <div className="flex flex-1 items-center  gap-2">
+              <Label className="" htmlFor="status">
+                Status
+              </Label>
+              <div>
+                <Select
+                  name="status"
+                  defaultValue={milestone.milestone.status}
+                  onValueChange={(value) => {
+                    onBlur({ target: { value, name: "status" } } as any);
+                  }}
+                  disabled={isFormDisabled}
+                >
+                  <SelectTrigger id="status" className="w-[100px]">
+                    <SelectValue
+                      placeholder="Select status"
+                      className="capitalize"
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {statusValues.map((t) => {
+                        return (
+                          <SelectItem key={t} value={t} className="capitalize">
+                            <span className="capitalize">
+                              {t.toLowerCase()}
+                            </span>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
             <div className="flex flex-1 items-center  gap-2">
               <Label className="" htmlFor="dueAt">
                 Due Date
@@ -307,7 +358,7 @@ function DisplayMilestone({
                     }
                   }}
                 >
-                  <PopoverTrigger asChild>
+                  <PopoverTrigger disabled={isFormDisabled} asChild>
                     <Button
                       type="button"
                       id="dueAt"
@@ -356,7 +407,7 @@ function DisplayMilestone({
                   open={openAssigneesPopover}
                   onOpenChange={setOpenAssigneesPopover}
                 >
-                  <PopoverTrigger asChild>
+                  <PopoverTrigger disabled={isFormDisabled} asChild>
                     <Button
                       className=""
                       name="assignees"
@@ -471,6 +522,7 @@ function DisplayMilestone({
             )}
             placeholder="What's this milestone about?"
             defaultContent={milestone.milestone.description ?? undefined}
+            disabled={isFormDisabled}
             onBlur={({ editor }) => {
               fetcher.submit(
                 {
