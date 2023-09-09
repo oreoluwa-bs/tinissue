@@ -1,4 +1,5 @@
 import {
+  datetime,
   int,
   mysqlTable,
   primaryKey,
@@ -32,6 +33,8 @@ export const projectMilestones = mysqlTable(
     })
       .notNull()
       .default("BACKLOG"),
+
+    dueAt: datetime("due_at", { mode: "date" }),
 
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").onUpdateNow(),
