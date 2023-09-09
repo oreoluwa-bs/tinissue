@@ -49,6 +49,7 @@ export async function createMilestone(
     const slug = slugifyAndAddRandomSuffix(projectData.name);
 
     await tx.insert(projectMilestones).values({
+      dueAt: projectData.dueAt,
       name: projectData.name,
       projectId: projectData.projectId,
       description: projectData.description,

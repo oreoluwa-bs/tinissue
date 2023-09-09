@@ -28,6 +28,33 @@ export const createProjectMilestoneSchema = z.object({
   assigneesId: z
     .array(z.union([z.number(), z.string()]).transform((v) => Number(v)))
     .default([]),
+
+  dueAt: z
+    .string()
+    .nullish()
+    .transform((v, ctx) => {
+      // If the value is undefined it is removed from the ouput later on
+      if (v === undefined) {
+        return undefined;
+      }
+
+      // If the value is null or empty then set the date to null
+      if (v === null || v === "") {
+        return null;
+      }
+
+      if (isNaN(Date.parse(v))) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["dueAt"],
+          message: "Invalid date and time",
+        });
+        return z.NEVER;
+      }
+
+      // return v;
+      return new Date(v);
+    }),
 });
 
 export type ICreateProjectMilestone = z.infer<
@@ -55,6 +82,33 @@ export const editMilestoneSchema = z.object({
   assigneesId: z
     .array(z.union([z.number(), z.string()]).transform((v) => Number(v)))
     .default([]),
+
+  dueAt: z
+    .string()
+    .nullish()
+    .transform((v, ctx) => {
+      // If the value is undefined it is removed from the ouput later on
+      if (v === undefined) {
+        return undefined;
+      }
+
+      // If the value is null or empty then set the date to null
+      if (v === null || v === "") {
+        return null;
+      }
+
+      if (isNaN(Date.parse(v))) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["dueAt"],
+          message: "Invalid date and time",
+        });
+        return z.NEVER;
+      }
+
+      // return v;
+      return new Date(v);
+    }),
 });
 
 export type IEditMilestone = z.infer<typeof editMilestoneSchema>;
