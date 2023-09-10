@@ -1,16 +1,17 @@
 import { type LinksFunction } from "@remix-run/node";
+import TiptapLink from "@tiptap/extension-link";
+import Placeholder from "@tiptap/extension-placeholder";
+import TaskItem from "@tiptap/extension-task-item";
+import TaskList from "@tiptap/extension-task-list";
 import {
   EditorProvider,
   // FloatingMenu,
   // BubbleMenu,
   type EditorProviderProps,
 } from "@tiptap/react";
-import styles from "./main.css";
 import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
 import { cn } from "~/lib/utils";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
+import styles from "./main.css";
 import { SuggestionCommand } from "./slash-menu";
 import { suggestions } from "./slash-menu/suggestions";
 
@@ -34,6 +35,7 @@ const extensions = [
     // @ts-ignore
     suggestion: suggestions,
   }),
+  TiptapLink.configure({}),
 ];
 
 interface RichTextEditorProps {
@@ -54,7 +56,7 @@ export const RichTextEditor = (props: RichTextEditorProps) => {
       extensions={[
         Placeholder.configure({
           emptyEditorClass: "is-editor-empty",
-          placeholder: props.placeholder,
+          placeholder: props.placeholder ?? "Press '/' for commands.",
         }),
         ...extensions,
         ...(props.customExtentions ?? []),
