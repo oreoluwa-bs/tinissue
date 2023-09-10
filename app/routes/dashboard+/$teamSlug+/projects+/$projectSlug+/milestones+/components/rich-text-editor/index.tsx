@@ -14,12 +14,24 @@ import { cn } from "~/lib/utils";
 import styles from "./main.css";
 import { SuggestionCommand } from "./slash-menu";
 import { suggestions } from "./slash-menu/suggestions";
+import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import { common, createLowlight } from "lowlight";
 
-export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
+const lowlight = createLowlight(common);
+
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: styles },
+  {
+    rel: "stylesheet",
+    href: "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css",
+  },
+];
 
 // define your extension array
 const extensions = [
-  StarterKit,
+  StarterKit.configure({
+    codeBlock: false,
+  }),
   TaskList.configure({
     HTMLAttributes: {
       class: "not-prose",
@@ -36,6 +48,11 @@ const extensions = [
     suggestion: suggestions,
   }),
   TiptapLink.configure({}),
+
+  CodeBlockLowlight.configure({
+    lowlight,
+    languageClassPrefix: "language-",
+  }),
 ];
 
 interface RichTextEditorProps {

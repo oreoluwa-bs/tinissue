@@ -7,7 +7,7 @@ import {
 } from "@remix-run/node";
 import { useFetcher, useLoaderData } from "@remix-run/react";
 import format from "date-fns/format";
-import { CalendarIcon, CheckIcon, UserCircle } from "lucide-react";
+import { CalendarIcon, CheckIcon, Loader2Icon, UserCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ZodError } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
@@ -317,7 +317,7 @@ function DisplayMilestone({
                   }}
                   disabled={isFormDisabled}
                 >
-                  <SelectTrigger id="status" className="w-[100px]">
+                  <SelectTrigger id="status" className="min-w-[100px]">
                     <SelectValue
                       placeholder="Select status"
                       className="capitalize"
@@ -520,7 +520,7 @@ function DisplayMilestone({
             className={cn(
               "min-h-[80px] w-full rounded-md border-0 border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
             )}
-            placeholder="What's this milestone about?"
+            // placeholder="What's this milestone about?"
             defaultContent={milestone.milestone.description ?? undefined}
             disabled={isFormDisabled}
             onBlur={({ editor }) => {
@@ -536,6 +536,25 @@ function DisplayMilestone({
           />
         </div>
       </form>
+      <SavingIndicator active={fetcher.state !== "idle"} />
+    </div>
+  );
+}
+
+function SavingIndicator({ active }: { active: boolean }) {
+  return (
+    <div
+      role="progressbar"
+      aria-valuetext={active ? "Loading" : undefined}
+      aria-hidden={!active}
+      className={cn(
+        "pointer-events-none fixed bottom-0 right-10 z-50 p-4 transition-all duration-500 ease-out",
+        active ? "translate-y-0" : "translate-y-full",
+        "inline-flex items-center gap-2 text-xs",
+      )}
+    >
+      <Loader2Icon className={active ? "animate-spin" : ""} />
+      <span>Saving</span>
     </div>
   );
 }

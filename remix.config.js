@@ -30,4 +30,17 @@ module.exports = {
 
   tailwind: true,
   postcss: true,
+
+  serverDependenciesToBundle: [
+    "lowlight",
+    "higlight.js",
+    "devlop",
+    /^lowlight*/,
+    /^lowlight.*/,
+    /^highlight.js*/,
+    /^highlight.*/,
+    /^rehype.*/,
+    /^remark.*/,
+    /^unified.*/,
+  ],
 };
