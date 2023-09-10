@@ -44,14 +44,12 @@ export function generateAvatarThumbnail(
   text: string,
   options?: Partial<{ debug: boolean }>,
 ) {
-  const extra = options && formatURLSearchParams(options).toString;
+  const extra = options && formatURLSearchParams(options).toString();
 
-  return `/thumbnails/gen/avatar?text=${text}${
-    extra && `&${formatURLSearchParams}`
-  }`;
+  return `/thumbnails/gen/avatar?text=${text}${extra && `&${extra}`}`;
 }
 
-const formatURLSearchParams = (data: Record<string, any>) => {
+function formatURLSearchParams(data: Record<string, any>) {
   let modifiedData: Record<string, string> = {};
 
   Object.keys(data).forEach((key: string) => {
@@ -59,7 +57,7 @@ const formatURLSearchParams = (data: Record<string, any>) => {
   });
 
   return new URLSearchParams(modifiedData);
-};
+}
 
 export function blockPropagation(e: React.MouseEvent<HTMLElement, MouseEvent>) {
   let clickedElement = e.target as HTMLElement | null;
