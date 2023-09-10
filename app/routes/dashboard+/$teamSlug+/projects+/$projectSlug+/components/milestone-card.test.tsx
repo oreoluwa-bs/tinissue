@@ -17,6 +17,7 @@ const milestone = {
   name: "Go to School",
   createdAt: new Date(),
   updatedAt: new Date(),
+  dueAt: null,
   description: null,
   status: "BACKLOG" as const,
   projectId: 1,
@@ -100,5 +101,15 @@ describe("Milestone Card", () => {
       expect(onAddAssignee).toHaveBeenCalled();
     });
     // });
+  });
+
+  it("should open due at popover", async () => {
+    act(() => {
+      userEvent.click(screen.getByTestId("dueat-propover-trigger"));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/time/i)).toBeInTheDocument();
+    });
   });
 });
