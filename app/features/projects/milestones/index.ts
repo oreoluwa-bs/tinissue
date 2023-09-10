@@ -244,7 +244,7 @@ export async function editMilestone(data: IEditMilestone, userId: number) {
 
   const ability = defineAbilityFor(projectMember);
 
-  if (ability.cannot("edit", "Milestone")) {
+  if (ability.cannot("update", "Milestone")) {
     throw new Unauthorised("You do not have permission to edit this milestone");
   }
 
@@ -304,7 +304,7 @@ export async function createAssignees(data: ICreateAssignees, userId: number) {
 
   const ability = defineAbilityFor(projectMember);
 
-  if (ability.cannot("edit", "Milestone")) {
+  if (ability.cannot("update", "Milestone")) {
     throw new Unauthorised(
       "You do not have permission to assign a user to this milestone",
     );
@@ -333,7 +333,7 @@ export async function deleteAssignees(data: IDeleteAssignee, userId: number) {
 
   const ability = defineAbilityFor(projectMember);
 
-  if (ability.cannot("edit", "Milestone")) {
+  if (ability.cannot("update", "Milestone")) {
     throw new Unauthorised(
       "You do not have permission to unassign a user to this milestone",
     );

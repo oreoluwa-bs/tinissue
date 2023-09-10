@@ -247,7 +247,7 @@ export async function editTeam(data: IEditTeam, userId: number) {
 
   const ability = defineAbilityFor(teamMember);
 
-  if (ability.cannot("edit", "Team")) {
+  if (ability.cannot("update", "Team")) {
     throw new Unauthorised("You do not have permission to edit this team");
   }
 
@@ -407,7 +407,7 @@ export async function revokeInviteToTeam(
 
   const ability = defineAbilityFor(teamMember.team_members);
 
-  if (ability.cannot("edit", "Team")) {
+  if (ability.cannot("update", "Team")) {
     throw new Unauthorised(
       "You do not have permission to revoke this user's invite to this team",
     );
@@ -450,7 +450,7 @@ export async function revokeInviteToTeamThree(
 
   const ability = defineAbilityFor(teamMember.team_members);
 
-  if (ability.cannot("edit", "Team")) {
+  if (ability.cannot("update", "Team")) {
     throw new Unauthorised(
       "You do not have permission to revoke this user's invite to this team",
     );

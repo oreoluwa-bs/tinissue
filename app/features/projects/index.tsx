@@ -132,7 +132,7 @@ export async function editProject(data: IEditProject, userId: number) {
 
   const ability = defineAbilityFor(projectMember);
 
-  if (ability.cannot("edit", "Project")) {
+  if (ability.cannot("update", "Project")) {
     throw new Unauthorised("You do not have permission to edit this project");
   }
 
