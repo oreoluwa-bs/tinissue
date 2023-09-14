@@ -370,7 +370,11 @@ export async function inviteToTeam(data: IInviteToTeam, userId: number) {
 
   // Generate token
   const token = jwt.sign(
-    { teamId: teamInviteData.teamId, email: teamInviteData.email },
+    {
+      teamId: teamInviteData.teamId,
+      email: teamInviteData.email,
+      scope: "team",
+    },
     env.JWT_SECRET,
     { expiresIn: `${INVITE_WINDOW_IN_DAYS}d` },
   );
