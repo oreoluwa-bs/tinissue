@@ -475,6 +475,7 @@ export default function MembersRoute() {
   const loaderData = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [addMemberDialog, setAddMemberDialog] = useState(false);
   // const fetcher = useFetcher();
 
   const currentMember = loaderData.projectMembers?.find(
@@ -501,6 +502,8 @@ export default function MembersRoute() {
               .map(([key, value]) => value)
               .join("\n"),
         });
+      } else {
+        setAddMemberDialog(false);
       }
     }
   }, [actionData, navigation.state, toast]);
@@ -539,7 +542,7 @@ export default function MembersRoute() {
           </div>
 
           <div>
-            <Dialog>
+            <Dialog open={addMemberDialog} onOpenChange={setAddMemberDialog}>
               <DialogTrigger className={buttonVariants({ variant: "ghost" })}>
                 Add Member
               </DialogTrigger>

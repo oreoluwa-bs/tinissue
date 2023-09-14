@@ -470,6 +470,7 @@ export default function MembersRoute() {
   const loaderData = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const [searchParams, setSearchParams] = useSearchParams();
+  const [addMemberDialog, setAddMemberDialog] = useState(false);
   // const fetcher = useFetcher();
 
   const currentMember = loaderData.teamMembers?.find(
@@ -496,6 +497,8 @@ export default function MembersRoute() {
               .map(([key, value]) => value)
               .join("\n"),
         });
+      } else {
+        setAddMemberDialog(false);
       }
     }
   }, [actionData, navigation.state, toast]);
@@ -559,8 +562,10 @@ export default function MembersRoute() {
           </DropdownMenuContent>
         </DropdownMenu> */}
           <div>
-            <Dialog>
-              <DialogTrigger>Add Member</DialogTrigger>
+            <Dialog open={addMemberDialog} onOpenChange={setAddMemberDialog}>
+              <DialogTrigger className={buttonVariants({ variant: "ghost" })}>
+                Add Member
+              </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Invite to team</DialogTitle>
