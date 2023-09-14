@@ -6,7 +6,11 @@ import {
   uniqueIndex,
   varchar,
 } from "drizzle-orm/mysql-core";
-import { relations, type InferModel } from "drizzle-orm";
+import {
+  relations,
+  type InferSelectModel,
+  type InferInsertModel,
+} from "drizzle-orm";
 import { teamMembers } from "./teams";
 import { projectMembers } from "./projects";
 import { projectMilestoneAssignees } from "./project-milestones";
@@ -32,8 +36,8 @@ export const users = mysqlTable(
   },
 );
 
-export type User = InferModel<typeof users>;
-export type InsertUser = InferModel<typeof users, "insert">;
+export type User = InferSelectModel<typeof users>;
+export type InsertUser = InferInsertModel<typeof users>;
 
 export const usersRelations = relations(users, ({ many }) => ({
   teams: many(teamMembers),

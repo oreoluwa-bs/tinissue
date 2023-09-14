@@ -1,4 +1,4 @@
-import type { InferModel } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { relations } from "drizzle-orm";
 import {
   mysqlTable,
@@ -33,7 +33,7 @@ export const teams = mysqlTable(
   },
 );
 
-export type Team = InferModel<typeof teams>;
+export type Team = InferSelectModel<typeof teams>;
 
 export const teamsRelations = relations(teams, ({ many }) => ({
   members: many(teamMembers),
