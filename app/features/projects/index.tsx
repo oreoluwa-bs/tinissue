@@ -19,6 +19,10 @@ import {
   inviteToProjectSchema,
   type IRevokeInviteToProject,
   revokeInviteToProjectSchema,
+  editProjectMemberSchema,
+  type IEditProjectMember,
+  type IDeleteProjectMember,
+  deleteProjectMemberSchema,
 } from "./shared";
 import { userSelect } from "../user/utils";
 import { removeEmptyFields } from "~/lib/utils";
@@ -235,6 +239,59 @@ export async function getProjectMembers(
   });
 
   return membersAndInvitesList;
+}
+
+export async function editProjectMember(
+  data: IEditProjectMember,
+  userId: number,
+) {
+  const projectData = editProjectMemberSchema.parse(data);
+
+  const projectMember = await getProjectMember(projectData.id, userId);
+
+  const ability = defineAbilityFor(projectMember);
+
+  if (ability.cannot("edit", "Project")) {
+    throw new Unauthorised(
+      "You do not have permission to edit this project member",
+    );
+  }
+
+  await db
+    .update(projectMembers)
+    .set({ role: projectData.role })
+    .where(
+      and(
+        eq(projectMembers.projectId, projectData.id),
+        eq(projectMembers.userId, projectData.userId),
+      ),
+    );
+}
+
+export async function deleteProjectMember(
+  data: IDeleteProjectMember,
+  userId: number,
+) {
+  const projectData = deleteProjectMemberSchema.parse(data);
+
+  const projectMember = await getProjectMember(projectData.id, userId);
+
+  const ability = defineAbilityFor(projectMember);
+
+  if (ability.cannot("delete", "Project")) {
+    throw new Unauthorised(
+      "You do not have permission to remove this project member",
+    );
+  }
+
+  await db
+    .delete(projectMembers)
+    .where(
+      and(
+        eq(projectMembers.projectId, projectData.id),
+        eq(projectMembers.userId, projectData.userId),
+      ),
+    );
 }
 
 /**

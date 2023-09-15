@@ -34,6 +34,108 @@ export const editProjectSchema = z.object({
 
 export type IEditProject = z.infer<typeof editProjectSchema>;
 
+export const editProjectMemberSchema = z.object({
+  id: z
+    .union([z.number(), z.string()], {
+      errorMap: (issue, ctx) => {
+        if (issue.code === z.ZodIssueCode.invalid_union) {
+          return { message: "Invalid project" };
+        }
+        return { message: ctx.defaultError };
+      },
+    })
+    .transform((v, ctx) => {
+      const parsed = Number(v);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid project",
+        });
+
+        return z.NEVER;
+      }
+      return parsed;
+    }),
+
+  userId: z
+    .union([z.number(), z.string()], {
+      errorMap: (issue, ctx) => {
+        if (issue.code === z.ZodIssueCode.invalid_union) {
+          return { message: "Invalid user" };
+        }
+        return { message: ctx.defaultError };
+      },
+    })
+    .transform((v, ctx) => {
+      const parsed = Number(v);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid user",
+        });
+
+        return z.NEVER;
+      }
+      return parsed;
+    }),
+
+  role: z.enum(["OWNER", "ADMIN", "MEMBER"], {
+    required_error: "Role is required",
+  }),
+});
+export type IEditProjectMember = z.infer<typeof editProjectMemberSchema>;
+
+export const deleteProjectMemberSchema = z.object({
+  id: z
+    .union([z.number(), z.string()], {
+      errorMap: (issue, ctx) => {
+        // invalid_type_error: "Invalid team",
+        // required_error: "Team is required",
+        if (issue.code === z.ZodIssueCode.invalid_union) {
+          return { message: "Invalid project" };
+        }
+        return { message: ctx.defaultError };
+      },
+    })
+    .transform((v, ctx) => {
+      const parsed = Number(v);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid project",
+        });
+
+        return z.NEVER;
+      }
+      return parsed;
+    }),
+
+  userId: z
+    .union([z.number(), z.string()], {
+      errorMap: (issue, ctx) => {
+        // invalid_type_error: "Invalid user",
+        // required_error: "User is required",
+        if (issue.code === z.ZodIssueCode.invalid_union) {
+          return { message: "Invalid user" };
+        }
+        return { message: ctx.defaultError };
+      },
+    })
+    .transform((v, ctx) => {
+      const parsed = Number(v);
+      if (isNaN(parsed)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "Invalid user",
+        });
+
+        return z.NEVER;
+      }
+      return parsed;
+    }),
+});
+export type IDeleteProjectMember = z.infer<typeof deleteProjectMemberSchema>;
+
 /**
  * Project Invitations
  */

@@ -52,6 +52,7 @@ import {
 import { useToast } from "~/components/ui/use-toast";
 import { requireUserId } from "~/features/auth";
 import {
+  editProjectMember,
   getProject,
   getProjectMembers,
   inviteToProject,
@@ -65,6 +66,7 @@ import {
 } from "~/lib/errors";
 import { cn } from "~/lib/utils";
 import { MembersDataTable } from "./components/members-data-table";
+import { deleteTeamMember } from "~/features/teams";
 
 export async function action({ params, request }: ActionArgs) {
   const userId = await requireUserId(request);
@@ -93,19 +95,19 @@ export async function action({ params, request }: ActionArgs) {
       );
     }
 
-    // if (method === "PATCH") {
-    //   const credentials = {
-    //     ...formObject,
-    //     id: project.id,
-    //   } as any;
+    if (method === "PATCH") {
+      const credentials = {
+        ...formObject,
+        id: project.id,
+      } as any;
 
-    //   await editProjectMember(credentials, userId);
+      await editProjectMember(credentials, userId);
 
-    //   return json(
-    //     { fields: formObject, fieldErrors: null, formErrors: null },
-    //     { status: 200 },
-    //   );
-    // }
+      return json(
+        { fields: formObject, fieldErrors: null, formErrors: null },
+        { status: 200 },
+      );
+    }
 
     if (method === "DELETE") {
       if (formObject["__type"] === "revoke") {
@@ -123,24 +125,23 @@ export async function action({ params, request }: ActionArgs) {
           { status: 200 },
         );
       } else {
-        // await deleteTeamMember(
-        //   {
-        //     id: project.id,
-        //     userId: Number(formObject["userId"]),
-        //     ...formObject,
-        //   },
-        //   userId,
-        // );
+        await deleteTeamMember(
+          {
+            id: project.id,
+            userId: Number(formObject["userId"]),
+            ...formObject,
+          },
+          userId,
+        );
 
-        // return json(
-        //   {
-        //     fields: formObject,
-        //     fieldErrors: null,
-        //     formErrors: null,
-        //   },
-        //   { status: 200 },
-        // );
-        throw new MethodNotSupported();
+        return json(
+          {
+            fields: formObject,
+            fieldErrors: null,
+            formErrors: null,
+          },
+          { status: 200 },
+        );
       }
     }
 
