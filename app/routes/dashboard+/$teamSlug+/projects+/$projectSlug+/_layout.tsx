@@ -12,7 +12,7 @@ import { cn } from "~/lib/utils";
 import { getProject, getProjectMember } from "~/features/projects";
 import { NotFound } from "~/lib/errors";
 import { buttonVariants } from "~/components/ui/button";
-import { ChevronLeftIcon } from "lucide-react";
+import { HomeIcon } from "lucide-react";
 
 export async function loader({ params, request }: LoaderArgs) {
   const userId = await requireUserId(request);
@@ -116,7 +116,7 @@ function Navbar({
           }),
         )}
       >
-        <ChevronLeftIcon />
+        <HomeIcon strokeWidth={1.5} />
         {/* Back */}
       </Link>
       <div className="mx-2 h-[40px] w-[1px] rotate-12 bg-border" />
