@@ -513,7 +513,8 @@ function DueDate({
             <CalendarIcon
               className={cn(
                 "h-6 w-6 opacity-25 group-hover:opacity-100",
-                getDueStatusColor(getDueStatus(dueAt ?? null)),
+                ["DONE", "CANCELLED"].includes(milestone.status) &&
+                  getDueStatusColor(getDueStatus(dueAt ?? null)),
               )}
               strokeWidth="1.5px"
             />
