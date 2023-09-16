@@ -64,6 +64,7 @@ export async function credentialsSignUp(credentials: ICredentialsSignUp) {
       .trim()
       .split(" ")
       .map((i) => i[0].toUpperCase()) // Get initials
+      .filter(Boolean)
       .join(""),
   );
 

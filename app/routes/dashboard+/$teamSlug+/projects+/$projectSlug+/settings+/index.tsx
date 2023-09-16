@@ -92,7 +92,7 @@ function EditProjectForm({ project, teamSlug }: EditProjectFormProps) {
       ) : null}
       <fetcher.Form
         method="PATCH"
-        action={`/dashboard/${teamSlug}/projects/${project.slug}`}
+        action={`/dashboard/${teamSlug}/projects/${project.slug}?index`}
       >
         {/* <input
         name="id"
@@ -191,7 +191,7 @@ function DeleteProject({ project, teamSlug }: BaseSettingsProps) {
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <fetcher.Form
                 method="DELETE"
-                action={`/dashboard/${teamSlug}/projects/${project.slug}`}
+                action={`/dashboard/${teamSlug}/projects/${project.slug}?index`}
               >
                 <AlertDialogAction
                   type="submit"
